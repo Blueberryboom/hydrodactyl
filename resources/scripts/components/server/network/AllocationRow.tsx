@@ -85,8 +85,7 @@ const AllocationRow = ({ allocation }: Props) => {
     };
 
     const deleteAllocation = () => {
-        if (!confirm('Are you sure you want to delete this allocation?')) return;
-
+        setShowDeleteDialog(false);
         clearFlashes();
         setDeleteLoading(true);
 
@@ -197,7 +196,7 @@ const AllocationRow = ({ allocation }: Props) => {
                         <ActionButton
                             variant='danger'
                             size='sm'
-                            onClick={deleteAllocation}
+                            onClick={() => setShowDeleteDialog(true)}
                             disabled={allocation.isDefault || deleteLoading}
                             title={
                                 allocation.isDefault ? 'Cannot delete the primary allocation' : 'Delete this allocation'
@@ -213,6 +212,15 @@ const AllocationRow = ({ allocation }: Props) => {
                     </Can>
                 </div>
             </div>
+            <Dialog.Confirm
+                open={showDeleteDialog}
+                onClose={() => setShowDeleteDialog(false)}
+                title={'Delete Allocation'}
+                confirm={'Delete'}
+                onConfirmed={deleteAllocation}
+            >
+                Are you sure you want to delete this allocation? This action cannot be undone.
+            </Dialog.Confirm>
         </PageListItem>
     );
 };
