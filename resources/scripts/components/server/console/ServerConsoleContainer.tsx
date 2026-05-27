@@ -22,17 +22,19 @@ const ServerConsoleContainer = () => {
     return (
         <PageContentBlock title={'Console'} background={false} className='overflow-y-visible'>
             <div className='w-full h-full flex gap-4'>
-                <ServerHeader powerButtons={true} />
-                {(isNodeUnderMaintenance || isInstalling || isTransferring) && (
-                    <Alert type={'warning'} className={'mb-4'}>
-                        {isNodeUnderMaintenance
-                            ? 'The node of this server is currently under maintenance and all actions are unavailable.'
-                            : isInstalling
-                                ? 'This server is currently running its installation process and most actions are unavailable.'
-                                : 'This server is currently being transferred to another node and all actions are unavailable.'}
-                    </Alert>
-                )}
-                <Console />
+                <div className='flex flex-col flex-1 gap-4'>
+                    <ServerHeader powerButtons={true} />
+                    {(isNodeUnderMaintenance || isInstalling || isTransferring) && (
+                        <Alert type={'warning'} className={''}>
+                            {isNodeUnderMaintenance
+                                ? 'The node of this server is currently under maintenance and all actions are unavailable.'
+                                : isInstalling
+                                    ? 'This server is currently running its installation process and most actions are unavailable.'
+                                    : 'This server is currently being transferred to another node and all actions are unavailable.'}
+                        </Alert>
+                    )}
+                    <Console />
+                </div>
                 <div className='relative w-(--sidebar-full-width) overflow-y-auto overflow-x-visible flex-none -mb-(--main-wrapper-spacing) pb-(--main-wrapper-spacing)'>
                     <div className='flex flex-col gap-4'>
                         <Spinner.Suspense>
@@ -45,7 +47,7 @@ const ServerConsoleContainer = () => {
                     <Features enabled={eggFeatures} />
                 </ErrorBoundary>
             </div>
-        </PageContentBlock>
+        </PageContentBlock >
     );
 };
 
