@@ -1,7 +1,7 @@
 import { TriangleExclamation } from '@gravity-ui/icons';
 import { useStoreState } from 'easy-peasy';
 import { useState } from 'react';
-import ActionButton from '@/components/elements/ActionButton';
+import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/elements/dialog';
 import Spinner from '@/components/elements/Spinner';
 import FlashMessageRender from '@/components/FlashMessageRender';
@@ -110,13 +110,13 @@ const ConfirmPasswordModal = ({
             </div>
 
             <Dialog.Footer>
-                <ActionButton onClick={handleClose} variant='secondary' disabled={loading}>
+                <Button onClick={handleClose} variant='secondary' disabled={loading}>
                     Cancel
-                </ActionButton>
-                <ActionButton onClick={handleConfirm} variant='danger' disabled={loading || !password}>
+                </Button>
+                <Button onClick={handleConfirm} variant='attention' disabled={loading || !password}>
                     {loading && <Spinner size='small' />}
                     {loading ? 'Processing...' : confirmText}
-                </ActionButton>
+                </Button>
             </Dialog.Footer>
         </Dialog>
     );
