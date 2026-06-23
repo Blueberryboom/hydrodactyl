@@ -37,6 +37,7 @@
   - [ ] Database
     - [ ] New Database Model
     - [ ] Better Display of databases
+    - [ ] Postgres Support
   - [ ] Backups
    - [ ] New less cluttered way to show backups
    - [ ] Option in admin panel to Change how many backups are allowed to be made in a set period

@@ -1,0 +1,22 @@
+domains:
+    - hydrodactyl
+php_version: "8.5"
+js_runtime: bun
+framework: laravel
+framework_version: "12"
+secured: true
+services:
+    - mariadb-11:
+        preset: mariadb
+        version: "11"
+    - postgresql-18:
+        preset: postgres
+        version: "18"
+    - mailpit
+    - rustfs
+    - valkey:
+        preset: valkey
+workers:
+    - queue
+    - schedule
+    - vite
