@@ -145,126 +145,126 @@ const UserFormComponent = ({ subuser, onSuccess, onCancel, flashKey, isSubmittin
                     const isCategoryAllSelected = (key: string) =>
                         getCategoryPermissions(key).every((p) => values.permissions.includes(p));
                     return (
-                    <Form className='space-y-6'>
-                        {!subuser && (
-                            <div className='bg-gradient-to-b from-[#ffffff08] to-[#ffffff05] border border-[#ffffff12] rounded-xl p-6'>
-                                <div className='flex items-center gap-3 mb-6'>
-                                    <div className='w-10 h-10 rounded-lg bg-mocha-400 flex items-center justify-center'>
-                                        <Person
-                                            width={22}
-                                            height={22}
-                                            fill='currentColor'
-                                            className='w-5 h-5 text-brand'
-                                        />
+                        <Form className='space-y-6'>
+                            {!subuser && (
+                                <div className='rounded-xl p-6'>
+                                    <div className='flex items-center gap-3 mb-6'>
+                                        <div className='w-10 h-10 rounded-lg bg-mocha-400 flex items-center justify-center'>
+                                            <Person
+                                                width={22}
+                                                height={22}
+                                                fill='currentColor'
+                                                className='w-5 h-5 text-brand'
+                                            />
+                                        </div>
+                                        <h3 className='text-xl font-semibold text-zinc-100'>User Information</h3>
                                     </div>
-                                    <h3 className='text-xl font-semibold text-zinc-100'>User Information</h3>
-                                </div>
-                                <Field
-                                    name='email'
-                                    label='Email Address'
-                                    description='Enter the email address of the user you wish to invite as a subuser for this server.'
-                                />
-                            </div>
-                        )}
-
-                        <div className='bg-gradient-to-b from-[#ffffff08] to-[#ffffff05] border border-[#ffffff12] rounded-xl p-6'>
-                            <div className='flex items-center justify-between mb-6'>
-                                <div className='flex items-center gap-3'>
-                                    <div className='w-10 h-10 rounded-lg bg-brand/20 flex items-center justify-center'>
-                                        <Gear
-                                            width={22}
-                                            height={22}
-                                            fill='currentColor'
-                                            className='w-5 h-5 text-brand'
-                                        />
-                                    </div>
-                                    <h3 className='text-xl font-semibold text-zinc-100'>Detailed Permissions</h3>
-                                </div>
-                                {canEditUser && (
-                                    <Button
-                                        variant='secondary'
-                                        size='sm'
-                                        type='button'
-                                        onClick={() => toggleAll(values, setFieldValue)}
-                                    >
-                                        {allSelected ? 'Deselect All' : 'Select All'}
-                                    </Button>
-                                )}
-                            </div>
-
-                            {!isRootAdmin && loggedInPermissions[0] !== '*' && (
-                                <div className='mb-6 p-4 bg-brand/10 border border-brand/20 rounded-lg'>
-                                    <div className='flex items-center gap-3 mb-2'>
-                                        <Shield
-                                            width={22}
-                                            height={22}
-                                            fill='currentColor'
-                                            className='w-5 h-5 text-brand'
-                                        />
-                                        <span className='text-sm font-semibold text-brand'>Permission Restriction</span>
-                                    </div>
-                                    <p className='text-sm text-zinc-300 leading-relaxed'>
-                                        You can only assign permissions that you currently have access to.
-                                    </p>
+                                    <Field
+                                        name='email'
+                                        label='Email Address'
+                                        description='Enter the email address of the user you wish to invite as a subuser for this server.'
+                                    />
                                 </div>
                             )}
 
-                            <div className='space-y-4'>
-                                {Object.keys(permissions)
-                                    .filter((key) => key !== 'websocket')
-                                    .map((key) => (
-                                        <div key={key} className='border border-[#ffffff12] rounded-lg p-4'>
-                                            <div className='flex items-start justify-between mb-3'>
-                                                <div className='flex items-start gap-3 flex-1 min-w-0'>
-                                                    <PermissionIcon name={key} />
-                                                    <div className='flex-1 min-w-0'>
-                                                        <h4 className='font-medium text-zinc-200 capitalize'>{key}</h4>
-                                                        <p className='text-xs text-zinc-400 mt-1 break-words'>
-                                                            {permissions[key]?.description}
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                                {canEditUser && (
-                                                    <Button
-                                                        variant='secondary'
-                                                        size='sm'
-                                                        type='button'
-                                                        onClick={() => toggleCategory(key, values, setFieldValue)}
-                                                    >
-                                                        {isCategoryAllSelected(key) ? 'Deselect All' : 'Select All'}
-                                                    </Button>
-                                                )}
-                                            </div>
-
-                                            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
-                                                {getCategoryKeys(key).map((pkey) => (
-                                                    <PermissionRow
-                                                        key={`permission_${key}.${pkey}`}
-                                                        permission={`${key}.${pkey}`}
-                                                        disabled={
-                                                            !canEditUser ||
-                                                            !editablePermissions.includes(`${key}.${pkey}`)
-                                                        }
-                                                    />
-                                                ))}
-                                            </div>
+                            <div className='rounded-xl p-6'>
+                                <div className='flex items-center justify-between mb-6'>
+                                    <div className='flex items-center gap-3'>
+                                        <div className='w-10 h-10 rounded-lg bg-brand/20 flex items-center justify-center'>
+                                            <Gear
+                                                width={22}
+                                                height={22}
+                                                fill='currentColor'
+                                                className='w-5 h-5 text-brand'
+                                            />
                                         </div>
-                                    ))}
-                            </div>
-                        </div>
+                                        <h3 className='text-xl font-semibold text-zinc-100'>Detailed Permissions</h3>
+                                    </div>
+                                    {canEditUser && (
+                                        <Button
+                                            variant='secondary'
+                                            size='sm'
+                                            type='button'
+                                            onClick={() => toggleAll(values, setFieldValue)}
+                                        >
+                                            {allSelected ? 'Deselect All' : 'Select All'}
+                                        </Button>
+                                    )}
+                                </div>
 
-                        <Can action={subuser ? 'user.update' : 'user.create'}>
-                            <div className='flex gap-3 justify-end pt-4 border-t border-[#ffffff12]'>
-                                <Button variant='secondary' type='button' onClick={onCancel}>
-                                    Cancel
-                                </Button>
-                                <Button variant='attention' type='submit' disabled={isSubmitting}>
-                                    {subuser ? 'Save Changes' : 'Invite User'}
-                                </Button>
+                                {!isRootAdmin && loggedInPermissions[0] !== '*' && (
+                                    <div className='mb-6 p-4 bg-brand/10 border border-brand/20 rounded-lg'>
+                                        <div className='flex items-center gap-3 mb-2'>
+                                            <Shield
+                                                width={22}
+                                                height={22}
+                                                fill='currentColor'
+                                                className='w-5 h-5 text-brand'
+                                            />
+                                            <span className='text-sm font-semibold text-brand'>Permission Restriction</span>
+                                        </div>
+                                        <p className='text-sm text-zinc-300 leading-relaxed'>
+                                            You can only assign permissions that you currently have access to.
+                                        </p>
+                                    </div>
+                                )}
+
+                                <div className='space-y-4'>
+                                    {Object.keys(permissions)
+                                        .filter((key) => key !== 'websocket')
+                                        .map((key) => (
+                                            <div key={key} className='border border-[#ffffff12] rounded-lg p-4'>
+                                                <div className='flex items-start justify-between mb-3'>
+                                                    <div className='flex items-start gap-3 flex-1 min-w-0'>
+                                                        <PermissionIcon name={key} />
+                                                        <div className='flex-1 min-w-0'>
+                                                            <h4 className='font-medium text-zinc-200 capitalize'>{key}</h4>
+                                                            <p className='text-xs text-zinc-400 mt-1 break-words'>
+                                                                {permissions[key]?.description}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                    {canEditUser && (
+                                                        <Button
+                                                            variant='secondary'
+                                                            size='sm'
+                                                            type='button'
+                                                            onClick={() => toggleCategory(key, values, setFieldValue)}
+                                                        >
+                                                            {isCategoryAllSelected(key) ? 'Deselect All' : 'Select All'}
+                                                        </Button>
+                                                    )}
+                                                </div>
+
+                                                <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
+                                                    {getCategoryKeys(key).map((pkey) => (
+                                                        <PermissionRow
+                                                            key={`permission_${key}.${pkey}`}
+                                                            permission={`${key}.${pkey}`}
+                                                            disabled={
+                                                                !canEditUser ||
+                                                                !editablePermissions.includes(`${key}.${pkey}`)
+                                                            }
+                                                        />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
+                                </div>
                             </div>
-                        </Can>
-                    </Form>
-                );
+
+                            <Can action={subuser ? 'user.update' : 'user.create'}>
+                                <div className='flex gap-3 justify-end pt-4 border-t border-[#ffffff12]'>
+                                    <Button variant='secondary' type='button' onClick={onCancel}>
+                                        Cancel
+                                    </Button>
+                                    <Button variant='attention' type='submit' disabled={isSubmitting}>
+                                        {subuser ? 'Save Changes' : 'Invite User'}
+                                    </Button>
+                                </div>
+                            </Can>
+                        </Form>
+                    );
                 }}
             </Formik>
         </>

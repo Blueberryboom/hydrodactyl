@@ -93,7 +93,7 @@ const EditUserContainer = () => {
             ) : (
                 <div className='px-2 sm:px-14 pt-6'>
                     <h1 className='text-[52px] font-extrabold leading-[98%] tracking-[-0.14rem] mb-8'>
-                        Edit User: {subuser.email}
+                        Editing: {subuser.email}
                     </h1>
                     <UserFormComponent
                         subuser={subuser}
