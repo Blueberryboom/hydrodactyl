@@ -5,9 +5,10 @@ import { useNavigate } from 'react-router-dom';
 import { httpErrorToHuman } from '@/api/http';
 import getServerSubusers from '@/api/server/users/getServerSubusers';
 import Can from '@/components/elements/Can';
-import VirtualizedList from '@/components/elements/VirtualizedList';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
+import VirtualizedList from '@/components/elements/VirtualizedList';
 import FlashMessageRender from '@/components/FlashMessageRender';
+import ServerHeader from '@/components/server/header/ServerHeader';
 import UserRow from '@/components/server/users/UserRow';
 import { Button } from '@/components/ui/button';
 
@@ -48,6 +49,7 @@ const UsersContainer = () => {
 
     return (
         <ServerContentBlock title={'Users'} className='p-0!'>
+            <ServerHeader />
             <FlashMessageRender byKey={'users'} />
             {loading ? (
                 <div className='flex items-center justify-center py-12'>

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 
 import { ServerContext } from '@/state/server';
 import type { Subuser } from '@/state/server/subusers';
+import ServerHeader from '@/components/server/header/ServerHeader';
 
 const EditUserContainer = () => {
     const navigate = useNavigate();
@@ -36,6 +37,7 @@ const EditUserContainer = () => {
     if (!subuser && subusers.length === 0) {
         return (
             <ServerContentBlock title={'Edit User'} className='p-0!'>
+                <ServerHeader />
                 <div className='px-2 pt-2 sm:px-14 sm:pt-14 flex flex-col sm:flex-row items-center gap-4'>
                     <div className='flex gap-2'>
                         <Button

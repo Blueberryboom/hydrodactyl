@@ -7,6 +7,7 @@ import UserFormComponent from '@/components/server/users/UserFormComponent';
 import { Button } from '@/components/ui/button';
 
 import { ServerContext } from '@/state/server';
+import ServerHeader from '@/components/server/header/ServerHeader';
 
 const CreateUserContainer = () => {
     const navigate = useNavigate();
@@ -23,7 +24,8 @@ const CreateUserContainer = () => {
     };
 
     return (
-        <ServerContentBlock title={'Create User'} className='p-0!'>
+        <ServerContentBlock title={'Create User'} className='p-0!' showFlashKey={'users'}>
+            <ServerHeader />
             <div className='px-2 pt-2 sm:px-14 sm:pt-14 flex flex-col sm:flex-row items-center gap-4'>
                 <div className='flex gap-2'>
                     <Button

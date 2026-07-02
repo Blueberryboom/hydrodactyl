@@ -73,7 +73,7 @@ const ScheduleTaskRow = ({ schedule, task }: Props) => {
                 schedule={schedule}
                 task={task}
                 visible={isEditing}
-                onModalDismissed={() => setIsEditing(false)}
+                onDismissed={() => setIsEditing(false)}
             />
             <ConfirmationModal
                 title={'Confirm task deletion'}

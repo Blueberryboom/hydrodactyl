@@ -1,12 +1,10 @@
+import { useEffect, useMemo } from 'react';
 import HeaderCentered from '@/components/dashboard/header/HeaderCentered';
-
-import { useEffect } from 'react';
 import { useHeader } from '@/contexts/HeaderContext';
 import { ServerContext } from '@/state/server';
-import { useMemo } from 'react';
+import PowerButtons from './PowerButtons';
 import ServerDetailsHeader from './ServerDetailsHeader';
 import { StatusPillHeader } from './StatusPillHeader';
-import PowerButtons from './PowerButtons';
 
 interface headerProps {
     powerButtons?: boolean;

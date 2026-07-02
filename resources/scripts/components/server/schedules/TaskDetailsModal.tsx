@@ -1,5 +1,5 @@
 import { Form, Formik, Field as FormikField, type FormikHelpers, useField } from 'formik';
-import { useContext, useEffect } from 'react';
+import { useEffect } from 'react';
 import styled from 'styled-components';
 import { boolean, number, object, string } from 'yup';
 import { httpErrorToHuman } from '@/api/http';
@@ -10,10 +10,9 @@ import Field from '@/components/elements/Field';
 import FormikFieldWrapper from '@/components/elements/FormikFieldWrapper';
 import FormikSwitchV2 from '@/components/elements/FormikSwitchV2';
 import { Textarea } from '@/components/elements/Input';
+import Modal, { type RequiredModalProps } from '@/components/elements/Modal';
 import Select from '@/components/elements/Select';
 import FlashMessageRender from '@/components/FlashMessageRender';
-import ModalContext from '@/context/ModalContext';
-import asModal from '@/hoc/asModal';
 import useFlash from '@/plugins/useFlash';
 import { ServerContext } from '@/state/server';
 
@@ -28,7 +27,7 @@ const Label = styled.label`
     padding-bottom: 0.5rem;
 `;
 
-interface Props {
+interface Props extends RequiredModalProps {
     schedule: Schedule;
     // If a task is provided we can assume we're editing it. If not provided,
     // we are creating a new one.
@@ -74,8 +73,7 @@ const ActionListener = () => {
     return null;
 };
 
-const TaskDetailsModal = ({ schedule, task }: Props) => {
-    const { dismiss, setPropOverrides } = useContext(ModalContext);
+const TaskDetailsModal = ({ schedule, task, visible, onDismissed, ...props }: Props) => {
     const { clearFlashes, addError } = useFlash();
 
     const uuid = ServerContext.useStoreState((state) => state.server.data!.uuid);
@@ -83,14 +81,8 @@ const TaskDetailsModal = ({ schedule, task }: Props) => {
     const backupLimit = ServerContext.useStoreState((state) => state.server.data!.featureLimits.backups);
 
     useEffect(() => {
-        return () => {
-            clearFlashes('schedule:task');
-        };
-    }, []);
-
-    useEffect(() => {
-        setPropOverrides({ title: task ? 'Edit Task' : 'Create Task' });
-    }, []);
+        clearFlashes('schedule:task');
+    }, [clearFlashes]);
 
     const submit = (values: Values, { setSubmitting }: FormikHelpers<Values>) => {
         clearFlashes('schedule:task');
@@ -109,7 +101,7 @@ const TaskDetailsModal = ({ schedule, task }: Props) => {
                     }
 
                     appendSchedule({ ...schedule, tasks });
-                    dismiss();
+                    onDismissed();
                 })
                 .catch((error) => {
                     console.error(error);
@@ -120,18 +112,24 @@ const TaskDetailsModal = ({ schedule, task }: Props) => {
     };
 
     return (
-        <div className='min-w-full'>
-            <Formik
-                onSubmit={submit}
-                validationSchema={schema}
-                initialValues={{
-                    action: task?.action || 'command',
-                    payload: task?.payload || '',
-                    timeOffset: task?.timeOffset.toString() || '0',
-                    continueOnFailure: task?.continueOnFailure || false,
-                }}
-            >
-                {({ isSubmitting, values }) => (
+        <Formik
+            onSubmit={submit}
+            validationSchema={schema}
+            initialValues={{
+                action: task?.action || 'command',
+                payload: task?.payload || '',
+                timeOffset: task?.timeOffset.toString() || '0',
+                continueOnFailure: task?.continueOnFailure || false,
+            }}
+        >
+            {({ isSubmitting, values }) => (
+                <Modal
+                    visible={visible}
+                    onDismissed={onDismissed}
+                    {...props}
+                    showSpinnerOverlay={isSubmitting}
+                    title={task ? 'Edit Task' : 'Create Task'}
+                >
                     <Form>
                         <FlashMessageRender byKey={'schedule:task'} />
                         <div className={`flex flex-col gap-3`}>
@@ -233,10 +231,10 @@ const TaskDetailsModal = ({ schedule, task }: Props) => {
                             </ActionButton>
                         </div>
                     </Form>
-                )}
-            </Formik>
-        </div>
+                </Modal>
+            )}
+        </Formik>
     );
 };
 
-export default asModal<Props>()(TaskDetailsModal);
+export default TaskDetailsModal;

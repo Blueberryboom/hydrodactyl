@@ -1,10 +1,10 @@
 import { TriangleExclamation } from '@gravity-ui/icons';
 import { useStoreState } from 'easy-peasy';
 import { useState } from 'react';
-import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/elements/dialog';
 import Spinner from '@/components/elements/Spinner';
 import FlashMessageRender from '@/components/FlashMessageRender';
+import { Button } from '@/components/ui/button';
 import type { ApplicationStore } from '@/state';
 
 interface ConfirmPasswordModalProps {
@@ -75,7 +75,10 @@ const ConfirmPasswordModal = ({
 
                 <div className='space-y-3'>
                     <div>
-                        <label htmlFor={`${flashKey}-password`} className='block text-sm font-medium text-zinc-300 mb-1'>
+                        <label
+                            htmlFor={`${flashKey}-password`}
+                            className='block text-sm font-medium text-zinc-300 mb-1'
+                        >
                             Password
                         </label>
                         <input
@@ -91,7 +94,10 @@ const ConfirmPasswordModal = ({
 
                     {hasTwoFactor && (
                         <div>
-                            <label htmlFor={`${flashKey}-totp`} className='block text-sm font-medium text-zinc-300 mb-1'>
+                            <label
+                                htmlFor={`${flashKey}-totp`}
+                                className='block text-sm font-medium text-zinc-300 mb-1'
+                            >
                                 Two-Factor Authentication Code
                             </label>
                             <input

@@ -5,13 +5,13 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 import { toast } from 'sonner';
 import deleteAllServerBackups from '@/api/server/backups/deleteAllServerBackups';
 import getServerBackups, { Context as ServerBackupContext } from '@/api/swr/getServerBackups';
-import ActionButton from '@/components/elements/ActionButton';
 import Can from '@/components/elements/Can';
 import Pagination from '@/components/elements/Pagination';
 import ServerContentBlock from '@/components/elements/ServerContentBlock';
 import VirtualizedList from '@/components/elements/VirtualizedList';
 import FlashMessageRender from '@/components/FlashMessageRender';
 import { SocketEvent } from '@/components/server/events';
+import ServerHeader from '@/components/server/header/ServerHeader';
 import { Button } from '@/components/ui/button';
 import useFlash from '@/plugins/useFlash';
 import useWebsocketEvent from '@/plugins/useWebsocketEvent';
@@ -166,6 +166,7 @@ const BackupContainer = () => {
 
     return (
         <ServerContentBlock className='p-0!' title={'Backups'}>
+            <ServerHeader />
             <FlashMessageRender byKey={'backups'} />
             {isLoading ? (
                 <div className='flex items-center justify-center py-12'>
