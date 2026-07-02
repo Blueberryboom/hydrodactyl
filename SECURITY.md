@@ -2,7 +2,7 @@
 
 ## Reporting a Vulnerability
 
-Please email `security@hydrodactyl.dev`.
+Please email `naterfute@blueprint.zip`.
 
 We make every effort to respond as soon as possible, although it may take a day or two for us to sync internally and determine the severity of the report and its impact. Please, _do not_ use a public facing channel or GitHub issues to report sensitive security issues.
 
