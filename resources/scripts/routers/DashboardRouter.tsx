@@ -143,7 +143,7 @@ const DashboardRouter = () => {
                         </DropdownMenu>
                     </div>
                     <div aria-hidden className='mt-8 mb-4 bg-[#ffffff33] min-h-[1px] w-6'></div>
-                    <ul data-pyro-subnav-routes-wrapper='' className='pyro-subnav-routes-wrapper'>
+                    <ul data-hydrodactyl-subnav-routes-wrapper='' className='hydrodactyl-subnav-routes-wrapper'>
                         <NavLink to={'/'} end className='flex flex-row items-center' ref={NavigationHome}>
                             <House width={22} height={22} fill='currentColor' />
                             <p>Servers</p>
@@ -166,8 +166,8 @@ const DashboardRouter = () => {
                 <Suspense fallback={null}>
                     <MainWrapper className='w-full'>
                         <main
-                            data-pyro-main=''
-                            data-pyro-transitionrouter=''
+                            data-hydrodactyl-main=''
+                            data-hydrodactyl-transitionrouter=''
                             className='relative inset-[1px] w-full h-full overflow-y-auto overflow-x-hidden rounded-md bg-[#08080875]'
                         >
                             <Routes>

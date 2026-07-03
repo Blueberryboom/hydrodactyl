@@ -79,8 +79,9 @@ $('#pNestId').on('change', function (event) {
             return {
                 id: item.id,
                 text: item.name,
-            })),
-        })
+            };
+        }),
+    })
     .change();
 });
 

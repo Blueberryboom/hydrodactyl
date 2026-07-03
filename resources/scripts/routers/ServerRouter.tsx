@@ -321,8 +321,8 @@ const ServerRouter = () => {
                             <ul
                                 ref={navContainerRef}
                                 onScroll={handleScroll}
-                                data-pyro-subnav-routes-wrapper=''
-                                className='pyro-subnav-routes-wrapper flex-grow overflow-y-auto'
+                                data-hydrodactyl-subnav-routes-wrapper=''
+                                className='hydrodactyl-subnav-routes-wrapper flex-grow overflow-y-auto'
                             >
                                 {/* Dynamic navigation items from routes config */}
                                 {navRoutes.map((route) => (
@@ -352,8 +352,8 @@ const ServerRouter = () => {
                             <TransferListener />
                             <WebsocketHandler />
                             <main
-                                data-pyro-main=''
-                                data-pyro-transitionrouter=''
+                                data-hydrodactyl-main=''
+                                data-hydrodactyl-transitionrouter=''
                                 className='relative inset-[1px] w-full h-full overflow-y-auto overflow-x-hidden rounded-md bg-[#08080875]'
                             >
                                 {inConflictState &&

@@ -65,7 +65,7 @@ const App = () => {
             <StoreProvider store={store}>
                 <HydrodactylProvider>
                     <div
-                        data-pyro-routerwrap=''
+                        data-hydrodactyl-routerwrap=''
                         className='relative w-full h-full flex flex-row p-2 overflow-hidden rounded-lg'
                     >
                         <Toaster

@@ -336,7 +336,7 @@ const UnifiedRouter = () => {
                                     {/* server loading state */}
                                     {isServerRoute && !error && (!uuid || !id) && (
                                         <div className='flex items-center justify-center h-full opacity-10'>
-                                            <div className='p-1 pyro-logo1 '>
+                                            <div className='p-1 hydrodactyl-logo1 '>
                                                 <Logo />
                                             </div>
                                         </div>
