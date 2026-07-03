@@ -149,32 +149,32 @@ function AdminDashboard() {
     <div>
       <div className="row">
         <div className="col-md-3 col-sm-6 col-xs-12">
-          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16 }}>
+          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16, minHeight: 180, maxHeight: 180, overflow: 'hidden' }}>
             <DonutChart value={metrics.cpu} label="CPU Usage" unit="%" />
           </div>
         </div>
         <div className="col-md-3 col-sm-6 col-xs-12">
-          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16 }}>
-            <div style={{ textAlign: 'center', paddingTop: 8 }}>
+          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16, minHeight: 180, maxHeight: 180, overflow: 'hidden' }}>
+            <div style={{ textAlign: 'center', paddingTop: 40 }}>
               <div style={{ fontSize: 28, fontWeight: 700, color: '#eee' }}>{formatUptime(metrics.uptime)}</div>
               <div style={{ fontSize: 12, color: '#999', marginTop: 4 }}>Uptime</div>
             </div>
           </div>
         </div>
         <div className="col-md-3 col-sm-6 col-xs-12">
-          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16 }}>
+          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16, minHeight: 180, maxHeight: 180, overflow: 'hidden' }}>
             <UsageBar used={metrics.memory.used} total={metrics.memory.total} label="Memory" />
           </div>
         </div>
         <div className="col-md-3 col-sm-6 col-xs-12">
-          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16 }}>
+          <div className="small-box" style={{ background: '#1a1a1a', borderRadius: 6, padding: 16, minHeight: 180, maxHeight: 180, overflow: 'hidden' }}>
             <UsageBar used={metrics.disk.used} total={metrics.disk.total} label="Disk" />
           </div>
         </div>
       </div>
       <div className="row">
         <div className="col-md-6">
-          <div className="box" style={{ borderTop: '3px solid #52A9FF' }}>
+          <div className="box" style={{ borderTop: '3px solid #52A9FF', minHeight: 140 }}>
             <div className="box-header with-border"><h3 className="box-title">System Info</h3></div>
             <div className="box-body">
               <table style={{ width: '100%', fontSize: 13 }}>

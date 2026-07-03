@@ -48,28 +48,28 @@
           $logoType = config('app.logo.type');
           $logoValue = config('app.logo.value');
         @endphp
-        <span class="logo-mini">
+        <span class="logo-mini" style="display:flex;align-items:center;justify-content:center;height:50px;">
           @if($logoType === 'upload' && $logoValue)
-            <img src="{{ url('storage/' . $logoValue) }}" alt="{{ config('app.name', 'Panel') }}" style="max-height:30px;vertical-align:middle;">
+            <img src="{{ url('storage/' . $logoValue) }}" alt="{{ config('app.name', 'Panel') }}" style="max-height:36px;width:auto;display:block;">
           @elseif($logoType === 'link' && $logoValue)
-            <img src="{{ $logoValue }}" alt="{{ config('app.name', 'Panel') }}" style="max-height:30px;vertical-align:middle;">
+            <img src="{{ $logoValue }}" alt="{{ config('app.name', 'Panel') }}" style="max-height:36px;width:auto;display:block;">
           @else
-            <svg width="30" height="28" viewBox="0 0 100 92" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+            <svg width="36" height="33" viewBox="0 0 100 92" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;">
                 <path d="M35.1293 92L39.2242 59.3897L44.8276 60.4695L14.2241 81.2019L0 57.0141L32.7586 45.3521V47.7277L0 33.4742L14.2241 8.85446L45.6896 33.2582L39.2242 34.1221L34.4828 0H65.5172L61.4225 33.9061L56.681 32.8263L85.7759 8.85446L100 33.4742L66.1638 47.7277V45.5681L99.569 57.0141L85.3448 81.2019L57.5431 59.3897H61.638L66.1638 92H35.1293Z" fill="#52A9FF" />
             </svg>
           @endif
         </span>
-        <span class="logo-lg">
+        <span class="logo-lg" style="display:flex;align-items:center;height:50px;padding:0 15px;">
           @if($logoType === 'upload' && $logoValue)
-            <img src="{{ url('storage/' . $logoValue) }}" alt="" style="max-height:30px;vertical-align:middle;margin-right:6px;">
+            <img src="{{ url('storage/' . $logoValue) }}" alt="" style="max-height:36px;width:auto;margin-right:8px;flex-shrink:0;">
           @elseif($logoType === 'link' && $logoValue)
-            <img src="{{ $logoValue }}" alt="" style="max-height:30px;vertical-align:middle;margin-right:6px;">
+            <img src="{{ $logoValue }}" alt="" style="max-height:36px;width:auto;margin-right:8px;flex-shrink:0;">
           @else
-            <svg width="30" height="28" viewBox="0 0 100 92" fill="none" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;margin-right:6px;">
+            <svg width="36" height="33" viewBox="0 0 100 92" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-right:8px;flex-shrink:0;">
                 <path d="M35.1293 92L39.2242 59.3897L44.8276 60.4695L14.2241 81.2019L0 57.0141L32.7586 45.3521V47.7277L0 33.4742L14.2241 8.85446L45.6896 33.2582L39.2242 34.1221L34.4828 0H65.5172L61.4225 33.9061L56.681 32.8263L85.7759 8.85446L100 33.4742L66.1638 47.7277V45.5681L99.569 57.0141L85.3448 81.2019L57.5431 59.3897H61.638L66.1638 92H35.1293Z" fill="#52A9FF" />
             </svg>
           @endif
-          <b>{{ config('app.name', 'Hydrodactyl') }}</b>
+          <b style="font-size:16px;line-height:1.2;">{{ config('app.name', 'Hydrodactyl') }}</b>
         </span>
       </a>
       <nav class="navbar navbar-static-top">
