@@ -3,7 +3,7 @@ domains:
 php_version: "8.5"
 js_runtime: bun
 framework: laravel
-framework_version: "12"
+framework_version: "13"
 services:
     - mariadb-11:
         preset: mariadb

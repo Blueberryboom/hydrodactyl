@@ -10,7 +10,7 @@ use Pterodactyl\Http\Middleware\TrimStrings;
 use Illuminate\Session\Middleware\StartSession;
 use Pterodactyl\Http\Middleware\EncryptCookies;
 use Pterodactyl\Http\Middleware\Api\IsValidJson;
-use Pterodactyl\Http\Middleware\VerifyCsrfToken;
+use Pterodactyl\Http\Middleware\PreventRequestForgery;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Pterodactyl\Http\Middleware\LanguageMiddleware;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
@@ -60,7 +60,7 @@ class Kernel extends HttpKernel
             AddQueuedCookiesToResponse::class,
             StartSession::class,
             ShareErrorsFromSession::class,
-            VerifyCsrfToken::class,
+            PreventRequestForgery::class,
             SubstituteBindings::class,
             LanguageMiddleware::class,
         ],
@@ -98,7 +98,7 @@ class Kernel extends HttpKernel
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'auth.session' => AuthenticateSession::class,
         'guest' => RedirectIfAuthenticated::class,
-        'csrf' => VerifyCsrfToken::class,
+        'csrf' => PreventRequestForgery::class,
         'throttle' => ThrottleRequests::class,
         'can' => Authorize::class,
         'bindings' => SubstituteBindings::class,
