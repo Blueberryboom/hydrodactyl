@@ -17,7 +17,7 @@ $(document).ready(() => {
 $('#pNodeId').on('change', function () {
     const currentNode = $(this).val();
 
-    $.each(Pterodactyl.nodeData, (i, v) => {
+    $.each(Hydrodactyl.nodeData, (i, v) => {
         if (v.id == currentNode) {
             $('#pAllocation').html('').select2({
                 data: v.allocations,
@@ -37,7 +37,7 @@ function updateAdditionalAllocations() {
     const currentAllocation = $('#pAllocation').val();
     const currentNode = $('#pNodeId').val();
 
-    $.each(Pterodactyl.nodeData, (i, v) => {
+    $.each(Hydrodactyl.nodeData, (i, v) => {
         if (v.id == currentNode) {
             const allocations = [];
 
