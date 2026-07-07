@@ -113,7 +113,10 @@
         "dev:setup": "bash ./bin/devSetup.sh",
         "build": "vite build",
         "build:turbo": "turbo build",
-        "ship": "turbo build"
+        "ship": "turbo build",
+        "test": "php vendor/bin/phpunit",
+        "test:unit": "php vendor/bin/phpunit --testsuite=Unit",
+        "test:integration": "php vendor/bin/phpunit --testsuite=Integration"
     },
     "browserslist": [
         "> 0.5%",
