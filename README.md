@@ -44,13 +44,7 @@ See the [Installation Guide](https://hydrodactyl.dev/docs/hydrodactyl/installati
 - [Join the Discord](https://discord.gg/sK686yHdaK)
 - Star the repo and share it with someone who might find it useful!
 
-<a href="https://star-history.com/#BlueprintFramework/hydrodactyl&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=BlueprintFramework/hydrodactyl&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=BlueprintFramework/hydrodactyl&type=Date" />
-    <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=BlueprintFramework/hydrodactyl&type=Date" />
-  </picture>
-</a>
+[![BlueprintFramework/hydrodactyl contributors](https://shieldcn.dev/contributors/BlueprintFramework/hydrodactyl.svg?preset=grid&names=true&bots=true&titleAlign=center&mode=dark&watermark=true)](https://github.com/BlueprintFramework/hydrodactyl/graphs/contributors)
 
 ## License
 
