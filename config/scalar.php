@@ -24,7 +24,7 @@ return [
     | affect the paths of its internal API that aren't exposed to users.
     |
     */
-    'path' => '/scalar',
+    'path' => '/api/docs',
 
     /*
     |--------------------------------------------------------------------------
@@ -79,8 +79,8 @@ return [
         // 'bluePlanet',
         // 'deepSpace',
         // 'default',
-        // 'kepler',
-        'laravel',
+        'kepler',
+        // 'laravel',
         // 'mars',
         // 'moon',
         // 'purple',

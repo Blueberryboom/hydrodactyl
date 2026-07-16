@@ -30,8 +30,7 @@ class NetworkAllocationController extends ClientApiController
     }
 
     /**
-     * Lists all the allocations available to a server and whether
-     * they are currently assigned as the primary for this server.
+     * List network allocations
      */
     public function index(GetNetworkRequest $request, Server $server): array
     {
@@ -41,7 +40,7 @@ class NetworkAllocationController extends ClientApiController
     }
 
     /**
-     * Set the primary allocation for a server.
+     * Set allocation notes
      *
      * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
@@ -65,7 +64,7 @@ class NetworkAllocationController extends ClientApiController
     }
 
     /**
-     * Set the primary allocation for a server.
+     * Set primary allocation
      *
      * @throws \Pterodactyl\Exceptions\Model\DataValidationException
      * @throws \Pterodactyl\Exceptions\Repository\RecordNotFoundException
@@ -85,8 +84,7 @@ class NetworkAllocationController extends ClientApiController
     }
 
     /**
-     * Set the notes for the allocation for a server.
-     *s.
+     * Create allocation
      *
      * @throws DisplayException
      */
@@ -109,7 +107,7 @@ class NetworkAllocationController extends ClientApiController
     }
 
     /**
-     * Delete an allocation from a server.
+     * Delete allocation
      *
      * @throws DisplayException
      */

@@ -5,6 +5,253 @@ endpoints:
     custom: []
     httpMethods:
       - GET
+    uri: api/docs
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: ''
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters: []
+    cleanUrlParameters: []
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 200
+        content: |
+          <!doctype html>
+          <html>
+
+          <head>
+              <title>Hydrodactyl API Reference</title>
+              <meta charset="utf-8" />
+              <meta name="viewport" content="width=device-width, initial-scale=1" />
+              <script id="browser-logger-active">
+          (function() {
+              const ENDPOINT = 'http://hydrodactyl.test/_boost/browser-logs';
+              const logQueue = [];
+              let flushTimeout = null;
+
+              console.log('🔍 Browser logger active (MCP server detected). Posting to: ' + ENDPOINT);
+
+              // Store original console methods
+              const originalConsole = {
+                  log: console.log,
+                  info: console.info,
+                  error: console.error,
+                  warn: console.warn,
+                  table: console.table
+              };
+
+              // Helper to safely stringify values
+              function safeStringify(obj) {
+                  const seen = new WeakSet();
+                  return JSON.stringify(obj, (key, value) => {
+                      if (typeof value === 'object' && value !== null) {
+                          if (seen.has(value)) return '[Circular]';
+                          seen.add(value);
+                      }
+                      if (value instanceof Error) {
+                          return {
+                              name: value.name,
+                              message: value.message,
+                              stack: value.stack
+                          };
+                      }
+                      return value;
+                  });
+              }
+
+              // Batch and send logs
+              function flushLogs() {
+                  if (logQueue.length === 0) return;
+
+                  const batch = logQueue.splice(0, logQueue.length);
+
+                  fetch(ENDPOINT, {
+                      method: 'POST',
+                      headers: {
+                          'Content-Type': 'application/json',
+                          'X-Requested-With': 'XMLHttpRequest'
+                      },
+                      body: JSON.stringify({ logs: batch })
+                  }).catch(err => {
+                      // Silently fail to avoid infinite loops
+                      originalConsole.error('Failed to send logs:', err);
+                  });
+              }
+
+              // Debounced flush (100ms)
+              function scheduleFlush() {
+                  if (flushTimeout) clearTimeout(flushTimeout);
+                  flushTimeout = setTimeout(flushLogs, 100);
+              }
+
+              // Intercept console methods
+              ['log', 'info', 'error', 'warn', 'table'].forEach(method => {
+                  console[method] = function(...args) {
+                      // Call original method
+                      originalConsole[method].apply(console, args);
+
+                      // Capture log data
+                      try {
+                          logQueue.push({
+                              type: method,
+                              timestamp: new Date().toISOString(),
+                              data: args.map(arg => {
+                                  try {
+                                      return typeof arg === 'object' ? JSON.parse(safeStringify(arg)) : arg;
+                                  } catch (e) {
+                                      return String(arg);
+                                  }
+                              }),
+                              url: window.location.href,
+                              userAgent: navigator.userAgent
+                          });
+
+                          scheduleFlush();
+                      } catch (e) {
+                          // Fail silently
+                      }
+                  };
+              });
+
+              // Global error handlers for uncaught errors
+              const originalOnError = window.onerror;
+              window.onerror = function boostErrorHandler(errorMsg, url, lineNumber, colNumber, error) {
+                  try {
+                      logQueue.push({
+                          type: 'uncaught_error',
+                          timestamp: new Date().toISOString(),
+                          data: [{
+                              message: errorMsg,
+                              filename: url,
+                              lineno: lineNumber,
+                              colno: colNumber,
+                              error: error ? {
+                                  name: error.name,
+                                  message: error.message,
+                                  stack: error.stack
+                              } : null
+                          }],
+                          url: window.location.href,
+                          userAgent: navigator.userAgent
+                      });
+
+                      scheduleFlush();
+                  } catch (e) {
+                      // Fail silently
+                  }
+
+                  // Call original handler if it exists
+                  if (originalOnError && typeof originalOnError === 'function') {
+                      return originalOnError(errorMsg, url, lineNumber, colNumber, error);
+                  }
+
+                  // Let the error continue to propagate
+                  return false;
+              }
+              window.addEventListener('error', (event) => {
+                  try {
+                      logQueue.push({
+                          type: 'window_error',
+                          timestamp: new Date().toISOString(),
+                          data: [{
+                              message: event.message,
+                              filename: event.filename,
+                              lineno: event.lineno,
+                              colno: event.colno,
+                              error: event.error ? {
+                                  name: event.error.name,
+                                  message: event.error.message,
+                                  stack: event.error.stack
+                              } : null
+                          }],
+                          url: window.location.href,
+                          userAgent: navigator.userAgent
+                      });
+
+                      scheduleFlush();
+                  } catch (e) {
+                      // Fail silently
+                  }
+
+                  // Let the error continue to propagate
+                  return false;
+              });
+              window.addEventListener('unhandledrejection', (event) => {
+                  try {
+                      logQueue.push({
+                          type: 'error',
+                          timestamp: new Date().toISOString(),
+                          data: [{
+                              message: 'Unhandled Promise Rejection',
+                              reason: event.reason instanceof Error ? {
+                                  name: event.reason.name,
+                                  message: event.reason.message,
+                                  stack: event.reason.stack
+                              } : event.reason
+                          }],
+                          url: window.location.href,
+                          userAgent: navigator.userAgent
+                      });
+
+                      scheduleFlush();
+                  } catch (e) {
+                      // Fail silently
+                  }
+
+                  // Let the rejection continue to propagate
+                  return false;
+              });
+
+              // Flush on page unload
+              window.addEventListener('beforeunload', () => {
+                  if (logQueue.length > 0) {
+                      navigator.sendBeacon(ENDPOINT, JSON.stringify({ logs: logQueue }));
+                  }
+              });
+          })();
+          </script>
+          </head>
+
+          <body>
+                  <div id="app"></div>
+
+              <script src="https://cdn.jsdelivr.net/npm/@scalar/api-reference"></script>
+
+              <script>
+                 Scalar.createApiReference('#app', {"theme":"kepler","layout":"modern","proxyUrl":"https:\/\/proxy.scalar.com","showSidebar":true,"hideModels":false,"hideDownloadButton":false,"hideTestRequestButton":false,"hideSearch":false,"darkMode":true,"forceDarkModeState":"dark","hideDarkModeToggle":true,"searchHotKey":"k","metaData":{"title":"Hydrodactyl API Reference"},"favicon":"","hiddenClients":[],"defaultHttpClient":{"targetId":"shell","clientKey":"curl"},"withDefaultFonts":true,"defaultOpenAllTags":false,"_integration":"laravel","url":"\/docs\/openapi.yaml"})
+              </script>
+          </body>
+
+          </html>
+        headers:
+          content-type: 'text/html; charset=utf-8'
+          cache-control: 'no-cache, private'
+          set-cookie: 'XSRF-TOKEN=eyJpdiI6ImtDa0piYlBvWEpYdnNQMllscTRSWkE9PSIsInZhbHVlIjoiRTRJbVQyRkpoY3F1bWtJcTdiWXExNmI1YkhGTmVwVlBKb0VwSjNndDRLSWNPUm1yUHdxQThlbFRqRlZsd01XYnlHa3RvUXlMNWVFa0lGK3N6MFcya1ZZTysvaUJNRU5XR3VoNjhuM1lQMk1oSGFoc1hlc3NtQUF3QjM1LzVYVVIiLCJtYWMiOiI1MDBiODM5ZWUwZGZmNzk0NjI1MzMxMzQ3NDVlNGNhMDIzZGEwMDkwZDE4YjA1NzE5MWJlMzg1NmU0MTA2NWI4IiwidGFnIjoiIn0%3D; expires=Thu, 16 Jul 2026 20:27:58 GMT; Max-Age=43200; path=/; samesite=lax; pterodactyl_session=eyJpdiI6ImxRYnJ1SEx4a0VpcWRmdUYycG5JN3c9PSIsInZhbHVlIjoiWTZSYTJIZHpMVXlON2FjbWpVTjZBN1Y4d1JrbXBmYitGSWNVaG5oT1dCZUhBa3lZaFJlVDRvRVJsMGNxMS91RVNIaWE5RHZvbHFJUVNJRTd5RnpoK3JnOVdob2pFV3FuWmU0UkxrcmNXb0pvdWxRcVA5aVdKMmlYVzJwRHd1TXkiLCJtYWMiOiI2NTEzNjdjNTM5ZDBjNmJiMGM4OTk3ODBmMmRjMGY3M2Q0ZWUwYThlOTEyMTc1YWY1NjJjOThmZDMyNzIxNDQzIiwidGFnIjoiIn0%3D; expires=Thu, 16 Jul 2026 20:27:58 GMT; Max-Age=43200; path=/; httponly; samesite=lax'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
     uri: api/application/panel/status
     metadata:
       custom: []
@@ -53,10 +300,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Handle request to list all users on the panel. Returns a JSON-API representation
-        of a collection of users including any defined relations passed in
-        the request.
+      title: 'List all users'
       description: ''
       authenticated: false
       deprecated: false
@@ -97,9 +341,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Handle a request to view a single user. Includes any relations that
-        were defined in the request.
+      title: 'View a single user'
       description: ''
       authenticated: false
       deprecated: false
@@ -152,7 +394,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Retrieve a specific user from the database using their external ID.'
+      title: 'Get user by external ID'
       description: ''
       authenticated: false
       deprecated: false
@@ -205,9 +447,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Store a new user on the system. Returns the created user and an HTTP/201
-        header on successful creation.
+      title: 'Create a new user'
       description: ''
       authenticated: false
       deprecated: false
@@ -268,7 +508,7 @@ endpoints:
         name: root_admin
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -313,7 +553,7 @@ endpoints:
       external_id: m
       username: iy
       password: '|]|{+-'
-      root_admin: false
+      root_admin: true
       language: en
       first_name: vd
       last_name: l
@@ -335,9 +575,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Handle a request to delete a user from the Panel. Returns a HTTP/204 response
-        on successful deletion.
+      title: 'Delete a user'
       description: ''
       authenticated: false
       deprecated: false
@@ -380,7 +618,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the nodes currently available on the Panel.'
+      title: 'List all nodes'
       description: ''
       authenticated: false
       deprecated: false
@@ -421,10 +659,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Finds any nodes that are available using the given deployment criteria. This works
-        similarly to the server creation process, but allows you to pass the deployment object
-        to this endpoint and get back a list of all Nodes satisfying the requirements.
+      title: 'Find deployable nodes'
       description: ''
       authenticated: false
       deprecated: false
@@ -515,7 +750,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return data for a single instance of a node.'
+      title: 'View a single node'
       description: ''
       authenticated: false
       deprecated: false
@@ -568,10 +803,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns the configuration information for a node. This allows for automated deployments
-        to remote machines so long as an API key is provided to the machine to make the request
-        with, and the node is known.
+      title: 'Get node configuration'
       description: ''
       authenticated: false
       deprecated: false
@@ -624,9 +856,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Create a new node on the Panel. Returns the created node and an HTTP/201
-        status response on success.
+      title: 'Create a new node'
       description: ''
       authenticated: false
       deprecated: false
@@ -665,7 +895,7 @@ endpoints:
         name: public
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -850,7 +1080,7 @@ endpoints:
     cleanBodyParameters:
       name: 'www - -'
       location_id: architecto
-      public: true
+      public: false
       fqdn: architecto
       internal_fqdn: architecto
       scheme: architecto
@@ -885,9 +1115,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Deletes a given node from the Panel as long as there are no servers
-        currently attached to it.
+      title: 'Delete a node'
       description: ''
       authenticated: false
       deprecated: false
@@ -930,7 +1158,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the allocations that exist for a given node.'
+      title: 'List all allocations for a node'
       description: ''
       authenticated: false
       deprecated: false
@@ -983,7 +1211,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Store new allocations for a given node.'
+      title: 'Create allocations for a node'
       description: ''
       authenticated: false
       deprecated: false
@@ -1064,7 +1292,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete a specific allocation from the Panel.'
+      title: 'Delete an allocation'
       description: ''
       authenticated: false
       deprecated: false
@@ -1119,7 +1347,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the locations currently registered on the Panel.'
+      title: 'List all locations'
       description: ''
       authenticated: false
       deprecated: false
@@ -1160,7 +1388,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return a single location.'
+      title: 'View a single location'
       description: ''
       authenticated: false
       deprecated: false
@@ -1213,9 +1441,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Store a new location on the Panel and return an HTTP/201 response code with the
-        new location attached.
+      title: 'Create a new location'
       description: ''
       authenticated: false
       deprecated: false
@@ -1270,7 +1496,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete a location from the Panel.'
+      title: 'Delete a location'
       description: ''
       authenticated: false
       deprecated: false
@@ -1313,7 +1539,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the servers that currently exist on the Panel.'
+      title: 'List all servers'
       description: ''
       authenticated: false
       deprecated: false
@@ -1366,7 +1592,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Show a single server transformed for the application API.'
+      title: 'View a single server'
       description: ''
       authenticated: false
       deprecated: false
@@ -1419,7 +1645,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Retrieve a specific server from the database using its external ID.'
+      title: 'Get server by external ID'
       description: ''
       authenticated: false
       deprecated: false
@@ -1472,7 +1698,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new server on the system.'
+      title: 'Create a new server'
       description: ''
       authenticated: false
       deprecated: false
@@ -1577,7 +1803,7 @@ endpoints:
         name: skip_scripts
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1599,7 +1825,7 @@ endpoints:
         name: exclude_from_resource_calculation
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -1846,9 +2072,9 @@ endpoints:
       egg: architecto
       docker_image: 'n'
       startup: architecto
-      skip_scripts: true
+      skip_scripts: false
       oom_disabled: false
-      exclude_from_resource_calculation: true
+      exclude_from_resource_calculation: false
       limits:
         memory: 27
         overhead_memory: 39
@@ -1887,7 +2113,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Suspend a server on the Panel.'
+      title: 'Suspend a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -1930,7 +2156,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Unsuspend a server on the Panel.'
+      title: 'Unsuspend a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -1973,7 +2199,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Mark a server as needing to be reinstalled.'
+      title: 'Reinstall a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -2016,7 +2242,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Deletes a server.'
+      title: 'Delete a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -2059,7 +2285,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Deletes a server.'
+      title: 'Delete a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -2114,9 +2340,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Return a listing of all databases currently available to a single
-        server.
+      title: 'List all databases for a server'
       description: ''
       authenticated: false
       deprecated: false
@@ -2169,7 +2393,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return a single server database.'
+      title: 'View a single server database'
       description: ''
       authenticated: false
       deprecated: false
@@ -2234,7 +2458,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new database on the Panel for a given server.'
+      title: 'Create a server database'
       description: ''
       authenticated: false
       deprecated: false
@@ -2313,7 +2537,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Reset the password for a specific server database.'
+      title: 'Reset a database password'
       description: ''
       authenticated: false
       deprecated: false
@@ -2368,7 +2592,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Handle a request to delete a specific server database from the Panel.'
+      title: 'Delete a server database'
       description: ''
       authenticated: false
       deprecated: false
@@ -2423,7 +2647,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all Nests that exist on the Panel.'
+      title: 'List all nests'
       description: ''
       authenticated: false
       deprecated: false
@@ -2464,7 +2688,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return information about a single Nest model.'
+      title: 'View a single nest'
       description: ''
       authenticated: false
       deprecated: false
@@ -2517,7 +2741,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all eggs that exist for a given nest.'
+      title: 'List all eggs in a nest'
       description: ''
       authenticated: false
       deprecated: false
@@ -2570,7 +2794,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return a single egg that exists on the specified nest.'
+      title: 'View a single egg'
       description: ''
       authenticated: false
       deprecated: false
@@ -2635,9 +2859,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Return all the servers available to the client making the API
-        request, including servers the user has access to as a subuser.
+      title: 'List all accessible servers'
       description: ''
       authenticated: false
       deprecated: false
@@ -2678,9 +2900,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns distinct filter options (owners, nests, eggs, nodes) for servers
-        accessible to the current user. Used to populate the category filter dropdown.
+      title: 'Get server filter options'
       description: ''
       authenticated: false
       deprecated: false
@@ -2721,7 +2941,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns all the subuser permissions available on the system.'
+      title: 'List all system permissions'
       description: ''
       authenticated: false
       deprecated: false
@@ -2803,7 +3023,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all Nests that exist on the Panel.'
+      title: 'List all nests'
       description: ''
       authenticated: false
       deprecated: false
@@ -2844,7 +3064,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return information about a single Nest model.'
+      title: 'View a single nest'
       description: ''
       authenticated: false
       deprecated: false
@@ -2897,7 +3117,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Get the authenticated account'
       description: ''
       authenticated: false
       deprecated: false
@@ -2938,10 +3158,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns two-factor token credentials that allow a user to configure
-        it on their account. If two-factor is already enabled this endpoint
-        will return a 400 error.
+      title: 'Get two-factor setup credentials'
       description: ''
       authenticated: false
       deprecated: false
@@ -2982,7 +3199,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Updates a user's account to have two-factor enabled."
+      title: 'Enable two-factor authentication'
       description: ''
       authenticated: false
       deprecated: false
@@ -3013,9 +3230,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Disables two-factor authentication on an account if the password provided
-        is valid.
+      title: 'Disable two-factor authentication'
       description: ''
       authenticated: false
       deprecated: false
@@ -3046,7 +3261,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Update the authenticated user's email address."
+      title: 'Update account email'
       description: ''
       authenticated: false
       deprecated: false
@@ -3089,9 +3304,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Update the authenticated user's password. All existing sessions will be logged
-        out immediately.
+      title: 'Update account password'
       description: ''
       authenticated: false
       deprecated: false
@@ -3134,7 +3347,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Returns a paginated set of the user's activity logs."
+      title: 'List account activity logs'
       description: ''
       authenticated: false
       deprecated: false
@@ -3175,7 +3388,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns all the API keys that exist for the given client.'
+      title: 'List all API keys'
       description: ''
       authenticated: false
       deprecated: false
@@ -3216,7 +3429,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Store a new API key for a user's account."
+      title: 'Create an API key'
       description: ''
       authenticated: false
       deprecated: false
@@ -3273,7 +3486,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Deletes a given API key.'
+      title: 'Delete an API key'
       description: ''
       authenticated: false
       deprecated: false
@@ -3316,9 +3529,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns all the SSH keys that have been configured for the logged-in
-        user account.
+      title: 'List all SSH keys'
       description: ''
       authenticated: false
       deprecated: false
@@ -3359,7 +3570,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Stores a new SSH key for the authenticated user's account."
+      title: 'Add an SSH key'
       description: ''
       authenticated: false
       deprecated: false
@@ -3414,7 +3625,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Deletes an SSH key from the user's account."
+      title: 'Delete an SSH key'
       description: ''
       authenticated: false
       deprecated: false
@@ -3457,9 +3668,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Transform an individual server into a response that can be consumed by a
-        client using the API.
+      title: 'Get a single server'
       description: ''
       authenticated: false
       deprecated: false
@@ -3512,7 +3721,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Get server resources'
       description: ''
       authenticated: false
       deprecated: false
@@ -3565,7 +3774,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get subdomain information for a server.'
+      title: 'Get server subdomain'
       description: ''
       authenticated: false
       deprecated: false
@@ -3618,7 +3827,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new subdomain for the server, or replace an existing one.'
+      title: 'Create or replace subdomain'
       description: ''
       authenticated: false
       deprecated: false
@@ -3685,7 +3894,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Delete the server's subdomain."
+      title: 'Delete server subdomain'
       description: ''
       authenticated: false
       deprecated: false
@@ -3728,7 +3937,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Check if a subdomain is available.'
+      title: 'Check subdomain availability'
       description: ''
       authenticated: false
       deprecated: false
@@ -3795,7 +4004,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Search a single source (or list available sources when no source given).'
+      title: 'Search marketplace'
       description: ''
       authenticated: false
       deprecated: false
@@ -3934,7 +4143,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'List downloadable versions for a project.'
+      title: 'Get project versions'
       description: ''
       authenticated: false
       deprecated: false
@@ -4049,7 +4258,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Resolve a version into a direct download URL + destination directory.'
+      title: 'Resolve a version download'
       description: ''
       authenticated: false
       deprecated: false
@@ -4152,11 +4361,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        List the server's recorded installs. Install history lives in the panel
-        database (not on the daemon), so it is private to the panel and excluded
-        from server backups/archives. The frontend reconciles these against the
-        real jar files when rendering the "Installed" view.
+      title: 'List installed projects'
       description: ''
       authenticated: false
       deprecated: false
@@ -4209,9 +4414,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Record (or, on reinstall, update) an install. Called by the frontend
-        after a successful daemon pull.
+      title: 'Record an install'
       description: ''
       authenticated: false
       deprecated: false
@@ -4240,7 +4443,7 @@ endpoints:
         name: type
         description: ''
         required: true
-        example: mod
+        example: plugin
         type: string
         enumValues:
           - mod
@@ -4315,7 +4518,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      type: mod
+      type: plugin
       source: b
       project_id: 'n'
       project_title: g
@@ -4340,9 +4543,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Remove an install record. The jar file itself is deleted separately by the
-        frontend (via the existing file-delete endpoint).
+      title: 'Remove an install record'
       description: ''
       authenticated: false
       deprecated: false
@@ -4423,10 +4624,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        The cached Modrinth loader-tag list, so the frontend can validate the
-        loader extracted from a server's egg features against the live set rather
-        than a hard-coded list (auto-supports loaders Modrinth adds later).
+      title: 'List available loaders'
       description: ''
       authenticated: false
       deprecated: false
@@ -4479,7 +4677,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'What is, documenting your code?'
+      title: 'List supported game versions'
       description: ''
       authenticated: false
       deprecated: false
@@ -4532,9 +4730,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Transform an individual server into a response that can be consumed by a
-        client using the API.
+      title: 'Get server details'
       description: ''
       authenticated: false
       deprecated: false
@@ -4587,11 +4783,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Generates a one-time token that is sent along in every websocket call to the Daemon.'
-      description: |-
-        This is a signed JWT that the Daemon then uses to verify the user's identity, and
-        allows us to continually renew this token and avoid users maintaining sessions wrongly,
-        as well as ensure that user's only perform actions they're allowed to.
+      title: 'Get websocket token'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -4643,10 +4836,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Return the current resource utilization for a server. This value is cached for up to
-        20 seconds at a time to ensure that repeated requests to this endpoint do not cause
-        a flood of unnecessary API calls.
+      title: 'Get server resource usage'
       description: ''
       authenticated: false
       deprecated: false
@@ -4699,7 +4889,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns the activity logs for a server.'
+      title: 'List server activity logs'
       description: ''
       authenticated: false
       deprecated: false
@@ -4752,7 +4942,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Send a command to a running server.'
+      title: 'Send server command'
       description: ''
       authenticated: false
       deprecated: false
@@ -4807,7 +4997,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Send a power action to a server.'
+      title: 'Send power action'
       description: ''
       authenticated: false
       deprecated: false
@@ -4836,7 +5026,7 @@ endpoints:
         name: signal
         description: ''
         required: true
-        example: restart
+        example: kill
         type: string
         enumValues:
           - start
@@ -4847,7 +5037,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      signal: restart
+      signal: kill
     fileParameters: []
     responses: []
     responseFields: []
@@ -4866,7 +5056,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the databases that belong to the given server.'
+      title: 'List server databases'
       description: ''
       authenticated: false
       deprecated: false
@@ -4919,9 +5109,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Rotates the password for the given server model and returns a fresh instance to
-        the caller.
+      title: 'Rotate database password'
       description: ''
       authenticated: false
       deprecated: false
@@ -4976,7 +5164,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Removes a database from the server.'
+      title: 'Delete server database'
       description: ''
       authenticated: false
       deprecated: false
@@ -5031,7 +5219,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns a listing of files in a given directory.'
+      title: 'List files in directory'
       description: ''
       authenticated: false
       deprecated: false
@@ -5096,7 +5284,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return the contents of a specified file for the user.'
+      title: 'Get file contents'
       description: ''
       authenticated: false
       deprecated: false
@@ -5161,9 +5349,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Generates a one-time token with a link that the user can use to
-        download a given file.
+      title: 'Download file'
       description: ''
       authenticated: false
       deprecated: false
@@ -5228,7 +5414,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Renames a file on the remote machine.'
+      title: 'Rename file'
       description: ''
       authenticated: false
       deprecated: false
@@ -5320,7 +5506,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Copies a file on the server.'
+      title: 'Copy file'
       description: ''
       authenticated: false
       deprecated: false
@@ -5375,7 +5561,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Writes the contents of the specified file to the server.'
+      title: 'Write file contents'
       description: ''
       authenticated: false
       deprecated: false
@@ -5430,7 +5616,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Compress files'
       description: ''
       authenticated: false
       deprecated: false
@@ -5499,7 +5685,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Decompress files'
       description: ''
       authenticated: false
       deprecated: false
@@ -5566,7 +5752,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Deletes files or folders for the server in the given root directory.'
+      title: 'Delete files'
       description: ''
       authenticated: false
       deprecated: false
@@ -5635,7 +5821,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Creates a new folder on the server.'
+      title: 'Create folder'
       description: ''
       authenticated: false
       deprecated: false
@@ -5702,7 +5888,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates file permissions for file(s) in the given root directory.'
+      title: 'Update file permissions'
       description: ''
       authenticated: false
       deprecated: false
@@ -5795,7 +5981,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Requests that a file be downloaded from a remote location by Wings.'
+      title: 'Pull file from URL'
       description: ''
       authenticated: false
       deprecated: false
@@ -5857,7 +6043,7 @@ endpoints:
         name: use_header
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -5878,7 +6064,7 @@ endpoints:
       url: 'http://www.bailey.biz/quos-velit-et-fugiat-sunt-nihil-accusantium-harum.html'
       directory: architecto
       filename: architecto
-      use_header: false
+      use_header: true
       foreground: true
     fileParameters: []
     responses: []
@@ -5898,7 +6084,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns an url where files can be uploaded to.'
+      title: 'Get upload URL'
       description: ''
       authenticated: false
       deprecated: false
@@ -5951,7 +6137,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns all the schedules belonging to a given server.'
+      title: 'List schedules'
       description: ''
       authenticated: false
       deprecated: false
@@ -6004,7 +6190,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Store a new schedule for a server.'
+      title: 'Create a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -6025,6 +6211,222 @@ endpoints:
         deprecated: false
     cleanUrlParameters:
       server_uuid: 98296a05-b75f-42ea-b206-9b7031d5547a
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters:
+      name:
+        custom: []
+        name: name
+        description: 'Must not be greater than 191 characters.'
+        required: true
+        example: b
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      is_active:
+        custom: []
+        name: is_active
+        description: ''
+        required: false
+        example: false
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      minute:
+        custom: []
+        name: minute
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      hour:
+        custom: []
+        name: hour
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      day_of_month:
+        custom: []
+        name: day_of_month
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      month:
+        custom: []
+        name: month
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      day_of_week:
+        custom: []
+        name: day_of_week
+        description: ''
+        required: true
+        example: architecto
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      only_when_online:
+        custom: []
+        name: only_when_online
+        description: ''
+        required: false
+        example: true
+        type: boolean
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanBodyParameters:
+      name: b
+      is_active: false
+      minute: architecto
+      hour: architecto
+      day_of_month: architecto
+      month: architecto
+      day_of_week: architecto
+      only_when_online: true
+    fileParameters: []
+    responses: []
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - GET
+    uri: 'api/client/servers/wings/{server_uuid}/schedules/{schedule_id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'View a schedule'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      server_uuid:
+        custom: []
+        name: server_uuid
+        description: ''
+        required: true
+        example: 98296a05-b75f-42ea-b206-9b7031d5547a
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      schedule_id:
+        custom: []
+        name: schedule_id
+        description: 'The ID of the schedule.'
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      server_uuid: 98296a05-b75f-42ea-b206-9b7031d5547a
+      schedule_id: 3
+    queryParameters: []
+    cleanQueryParameters: []
+    bodyParameters: []
+    cleanBodyParameters: []
+    fileParameters: []
+    responses:
+      -
+        custom: []
+        status: 401
+        content: '{"errors":[{"code":"AuthenticationException","status":"401","detail":"Unauthenticated."}]}'
+        headers:
+          cache-control: 'no-cache, private'
+          content-type: application/json
+          access-control-allow-origin: ''
+          access-control-allow-credentials: 'true'
+        description: null
+    responseFields: []
+    auth: []
+    controller: null
+    method: null
+    route: null
+  -
+    custom: []
+    httpMethods:
+      - POST
+    uri: 'api/client/servers/wings/{server_uuid}/schedules/{schedule_id}'
+    metadata:
+      custom: []
+      groupName: Endpoints
+      groupDescription: ''
+      subgroup: ''
+      subgroupDescription: ''
+      title: 'Update a schedule'
+      description: ''
+      authenticated: false
+      deprecated: false
+    headers:
+      Content-Type: application/json
+      Accept: application/json
+    urlParameters:
+      server_uuid:
+        custom: []
+        name: server_uuid
+        description: ''
+        required: true
+        example: 98296a05-b75f-42ea-b206-9b7031d5547a
+        type: string
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+      schedule_id:
+        custom: []
+        name: schedule_id
+        description: 'The ID of the schedule.'
+        required: true
+        example: 3
+        type: integer
+        enumValues: []
+        exampleWasSpecified: false
+        nullable: false
+        deprecated: false
+    cleanUrlParameters:
+      server_uuid: 98296a05-b75f-42ea-b206-9b7031d5547a
+      schedule_id: 3
     queryParameters: []
     cleanQueryParameters: []
     bodyParameters:
@@ -6135,222 +6537,6 @@ endpoints:
   -
     custom: []
     httpMethods:
-      - GET
-    uri: 'api/client/servers/wings/{server_uuid}/schedules/{schedule_id}'
-    metadata:
-      custom: []
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Returns a specific schedule for the server.'
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      server_uuid:
-        custom: []
-        name: server_uuid
-        description: ''
-        required: true
-        example: 98296a05-b75f-42ea-b206-9b7031d5547a
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      schedule_id:
-        custom: []
-        name: schedule_id
-        description: 'The ID of the schedule.'
-        required: true
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      server_uuid: 98296a05-b75f-42ea-b206-9b7031d5547a
-      schedule_id: 3
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters: []
-    cleanBodyParameters: []
-    fileParameters: []
-    responses:
-      -
-        custom: []
-        status: 401
-        content: '{"errors":[{"code":"AuthenticationException","status":"401","detail":"Unauthenticated."}]}'
-        headers:
-          cache-control: 'no-cache, private'
-          content-type: application/json
-          access-control-allow-origin: ''
-          access-control-allow-credentials: 'true'
-        description: null
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
-      - POST
-    uri: 'api/client/servers/wings/{server_uuid}/schedules/{schedule_id}'
-    metadata:
-      custom: []
-      groupName: Endpoints
-      groupDescription: ''
-      subgroup: ''
-      subgroupDescription: ''
-      title: 'Updates a given schedule with the new data provided.'
-      description: ''
-      authenticated: false
-      deprecated: false
-    headers:
-      Content-Type: application/json
-      Accept: application/json
-    urlParameters:
-      server_uuid:
-        custom: []
-        name: server_uuid
-        description: ''
-        required: true
-        example: 98296a05-b75f-42ea-b206-9b7031d5547a
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      schedule_id:
-        custom: []
-        name: schedule_id
-        description: 'The ID of the schedule.'
-        required: true
-        example: 3
-        type: integer
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanUrlParameters:
-      server_uuid: 98296a05-b75f-42ea-b206-9b7031d5547a
-      schedule_id: 3
-    queryParameters: []
-    cleanQueryParameters: []
-    bodyParameters:
-      name:
-        custom: []
-        name: name
-        description: 'Must not be greater than 191 characters.'
-        required: true
-        example: b
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      is_active:
-        custom: []
-        name: is_active
-        description: ''
-        required: false
-        example: true
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      minute:
-        custom: []
-        name: minute
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      hour:
-        custom: []
-        name: hour
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      day_of_month:
-        custom: []
-        name: day_of_month
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      month:
-        custom: []
-        name: month
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      day_of_week:
-        custom: []
-        name: day_of_week
-        description: ''
-        required: true
-        example: architecto
-        type: string
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-      only_when_online:
-        custom: []
-        name: only_when_online
-        description: ''
-        required: false
-        example: false
-        type: boolean
-        enumValues: []
-        exampleWasSpecified: false
-        nullable: false
-        deprecated: false
-    cleanBodyParameters:
-      name: b
-      is_active: true
-      minute: architecto
-      hour: architecto
-      day_of_month: architecto
-      month: architecto
-      day_of_week: architecto
-      only_when_online: false
-    fileParameters: []
-    responses: []
-    responseFields: []
-    auth: []
-    controller: null
-    method: null
-    route: null
-  -
-    custom: []
-    httpMethods:
       - POST
     uri: 'api/client/servers/wings/{server_uuid}/schedules/{schedule_id}/execute'
     metadata:
@@ -6359,9 +6545,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Executes a given schedule immediately rather than waiting on it's normally scheduled time
-        to pass. This does not care about the schedule state.
+      title: 'Execute a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -6416,7 +6600,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Deletes a schedule and it's associated tasks."
+      title: 'Delete a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -6471,7 +6655,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new task for a given schedule and store it in the database.'
+      title: 'Create a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -6589,7 +6773,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates a given task for a server.'
+      title: 'Update a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -6689,7 +6873,7 @@ endpoints:
         name: continue_on_failure
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -6700,7 +6884,7 @@ endpoints:
       payload: architecto
       time_offset: 22
       sequence_id: 67
-      continue_on_failure: true
+      continue_on_failure: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -6719,9 +6903,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Delete a given task for a schedule. If there are subsequent tasks stored in the database
-        for this schedule their sequence IDs are decremented properly.
+      title: 'Delete a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -6788,9 +6970,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Lists all the allocations available to a server and whether
-        they are currently assigned as the primary for this server.
+      title: 'List network allocations'
       description: ''
       authenticated: false
       deprecated: false
@@ -6843,8 +7023,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Set the notes for the allocation for a server.'
-      description: s.
+      title: 'Create allocation'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -6886,7 +7066,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Set the primary allocation for a server.'
+      title: 'Set allocation notes'
       description: ''
       authenticated: false
       deprecated: false
@@ -6953,7 +7133,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Set the primary allocation for a server.'
+      title: 'Set primary allocation'
       description: ''
       authenticated: false
       deprecated: false
@@ -7008,7 +7188,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete an allocation from a server.'
+      title: 'Delete allocation'
       description: ''
       authenticated: false
       deprecated: false
@@ -7063,7 +7243,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return the users associated with this server instance.'
+      title: 'List server subusers'
       description: ''
       authenticated: false
       deprecated: false
@@ -7116,7 +7296,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new subuser for the given server.'
+      title: 'Create a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -7185,7 +7365,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns a single subuser associated with this server instance.'
+      title: 'View a single subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -7250,7 +7430,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update a given subuser in the system for the server.'
+      title: 'Update a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -7319,7 +7499,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Removes a subusers from a server's assignment."
+      title: 'Delete a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -7374,9 +7554,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns all the backups for a given server instance in a paginated
-        result set.
+      title: 'List backups'
       description: ''
       authenticated: false
       deprecated: false
@@ -7429,7 +7607,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Starts the backup process for a server.'
+      title: 'Create a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -7508,7 +7686,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns information about a single backup.'
+      title: 'View a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -7573,10 +7751,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Download the backup for a given server instance. For daemon local files, the file
-        will be streamed back through the Panel. For AWS S3 files, a signed URL will be generated
-        which the user is redirected to.
+      title: 'Download a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -7641,7 +7816,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Toggles the lock status of a given backup for a server.'
+      title: 'Toggle backup lock'
       description: ''
       authenticated: false
       deprecated: false
@@ -7696,14 +7871,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Handles restoring a backup by making a request to the Wings instance telling it
-        to begin the process of finding (or downloading) the backup and unpacking it
-        over the server files.
-      description: |-
-        If the "truncate" flag is passed through in this request then all the
-        files that currently exist on the server will be deleted before restoring.
-        Otherwise, the archive will simply be unpacked over the existing files.
+      title: 'Restore a backup'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -7757,9 +7926,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Deletes a backup from the panel as well as the remote source where it is currently
-        being stored.
+      title: 'Delete a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -7814,7 +7981,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns the startup information for the server including all the variables.'
+      title: 'Get server startup config'
       description: ''
       authenticated: false
       deprecated: false
@@ -7867,7 +8034,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates a single variable for a server.'
+      title: 'Update startup variable'
       description: ''
       authenticated: false
       deprecated: false
@@ -7933,7 +8100,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates the startup command for a server.'
+      title: 'Update startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -7988,7 +8155,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Returns the default startup command for the server's egg."
+      title: 'Get default startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -8041,7 +8208,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Process a startup command with variables for live preview.'
+      title: 'Preview startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -8084,7 +8251,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Renames a server.'
+      title: 'Rename server'
       description: ''
       authenticated: false
       deprecated: false
@@ -8151,7 +8318,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Reinstalls the server on the daemon.'
+      title: 'Reinstall server'
       description: ''
       authenticated: false
       deprecated: false
@@ -8194,7 +8361,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Preview egg change'
       description: ''
       authenticated: false
       deprecated: false
@@ -8261,8 +8428,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Apply egg configuration changes asynchronously.'
-      description: 'This dispatches a background job to handle the complete egg change process.'
+      title: 'Apply egg change'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -8346,7 +8513,7 @@ endpoints:
         name: should_backup
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -8370,7 +8537,7 @@ endpoints:
       startup_command: g
       environment:
         - z
-      should_backup: false
+      should_backup: true
       should_wipe: true
     fileParameters: []
     responses: []
@@ -8390,9 +8557,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Transform an individual server into a response that can be consumed by a
-        client using the API.
+      title: 'Get server details'
       description: ''
       authenticated: false
       deprecated: false
@@ -8445,11 +8610,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Generates a one-time token that is sent along in every websocket call to the Daemon.'
-      description: |-
-        This is a signed JWT that the Daemon then uses to verify the user's identity, and
-        allows us to continually renew this token and avoid users maintaining sessions wrongly,
-        as well as ensure that user's only perform actions they're allowed to.
+      title: 'Get websocket token'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -8501,10 +8663,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Return the current resource utilization for a server. This value is cached for up to
-        20 seconds at a time to ensure that repeated requests to this endpoint do not cause
-        a flood of unnecessary API calls.
+      title: 'Get server resource usage'
       description: ''
       authenticated: false
       deprecated: false
@@ -8557,7 +8716,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns the activity logs for a server.'
+      title: 'List server activity logs'
       description: ''
       authenticated: false
       deprecated: false
@@ -8610,7 +8769,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Send a command to a running server.'
+      title: 'Send server command'
       description: ''
       authenticated: false
       deprecated: false
@@ -8665,7 +8824,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Send a power action to a server.'
+      title: 'Send power action'
       description: ''
       authenticated: false
       deprecated: false
@@ -8724,7 +8883,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return all the databases that belong to the given server.'
+      title: 'List server databases'
       description: ''
       authenticated: false
       deprecated: false
@@ -8777,9 +8936,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Rotates the password for the given server model and returns a fresh instance to
-        the caller.
+      title: 'Rotate database password'
       description: ''
       authenticated: false
       deprecated: false
@@ -8834,7 +8991,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Removes a database from the server.'
+      title: 'Delete server database'
       description: ''
       authenticated: false
       deprecated: false
@@ -8889,7 +9046,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns a listing of files in a given directory.'
+      title: 'List files in directory'
       description: ''
       authenticated: false
       deprecated: false
@@ -8954,7 +9111,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return the contents of a specified file for the user.'
+      title: 'Get file contents'
       description: ''
       authenticated: false
       deprecated: false
@@ -9019,9 +9176,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Generates a one-time token with a link that the user can use to
-        download a given file.
+      title: 'Download file'
       description: ''
       authenticated: false
       deprecated: false
@@ -9086,7 +9241,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Renames a file on the remote machine.'
+      title: 'Rename file'
       description: ''
       authenticated: false
       deprecated: false
@@ -9178,7 +9333,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Copies a file on the server.'
+      title: 'Copy file'
       description: ''
       authenticated: false
       deprecated: false
@@ -9233,7 +9388,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Writes the contents of the specified file to the server.'
+      title: 'Write file contents'
       description: ''
       authenticated: false
       deprecated: false
@@ -9288,7 +9443,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Compress files'
       description: ''
       authenticated: false
       deprecated: false
@@ -9357,7 +9512,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Decompress files'
       description: ''
       authenticated: false
       deprecated: false
@@ -9424,7 +9579,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Deletes files or folders for the server in the given root directory.'
+      title: 'Delete files'
       description: ''
       authenticated: false
       deprecated: false
@@ -9493,7 +9648,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Creates a new folder on the server.'
+      title: 'Create folder'
       description: ''
       authenticated: false
       deprecated: false
@@ -9560,7 +9715,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates file permissions for file(s) in the given root directory.'
+      title: 'Update file permissions'
       description: ''
       authenticated: false
       deprecated: false
@@ -9653,7 +9808,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Requests that a file be downloaded from a remote location by Wings.'
+      title: 'Pull file from URL'
       description: ''
       authenticated: false
       deprecated: false
@@ -9715,7 +9870,7 @@ endpoints:
         name: use_header
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -9726,7 +9881,7 @@ endpoints:
         name: foreground
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -9736,8 +9891,8 @@ endpoints:
       url: 'http://www.bailey.biz/quos-velit-et-fugiat-sunt-nihil-accusantium-harum.html'
       directory: architecto
       filename: architecto
-      use_header: true
-      foreground: true
+      use_header: false
+      foreground: false
     fileParameters: []
     responses: []
     responseFields: []
@@ -9756,7 +9911,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns an url where files can be uploaded to.'
+      title: 'Get upload URL'
       description: ''
       authenticated: false
       deprecated: false
@@ -9809,7 +9964,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns all the schedules belonging to a given server.'
+      title: 'List schedules'
       description: ''
       authenticated: false
       deprecated: false
@@ -9862,7 +10017,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Store a new schedule for a server.'
+      title: 'Create a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -9902,7 +10057,7 @@ endpoints:
         name: is_active
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -9976,7 +10131,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      is_active: true
+      is_active: false
       minute: architecto
       hour: architecto
       day_of_month: architecto
@@ -10001,7 +10156,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns a specific schedule for the server.'
+      title: 'View a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -10066,7 +10221,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates a given schedule with the new data provided.'
+      title: 'Update a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -10217,9 +10372,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Executes a given schedule immediately rather than waiting on it's normally scheduled time
-        to pass. This does not care about the schedule state.
+      title: 'Execute a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -10274,7 +10427,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Deletes a schedule and it's associated tasks."
+      title: 'Delete a schedule'
       description: ''
       authenticated: false
       deprecated: false
@@ -10329,7 +10482,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new task for a given schedule and store it in the database.'
+      title: 'Create a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -10417,7 +10570,7 @@ endpoints:
         name: continue_on_failure
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -10428,7 +10581,7 @@ endpoints:
       payload: architecto
       time_offset: 22
       sequence_id: 67
-      continue_on_failure: false
+      continue_on_failure: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -10447,7 +10600,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates a given task for a server.'
+      title: 'Update a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -10500,7 +10653,7 @@ endpoints:
         name: action
         description: ''
         required: true
-        example: backup
+        example: command
         type: string
         enumValues:
           - command
@@ -10547,18 +10700,18 @@ endpoints:
         name: continue_on_failure
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      action: backup
+      action: command
       payload: architecto
       time_offset: 22
       sequence_id: 67
-      continue_on_failure: false
+      continue_on_failure: true
     fileParameters: []
     responses: []
     responseFields: []
@@ -10577,9 +10730,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Delete a given task for a schedule. If there are subsequent tasks stored in the database
-        for this schedule their sequence IDs are decremented properly.
+      title: 'Delete a schedule task'
       description: ''
       authenticated: false
       deprecated: false
@@ -10646,9 +10797,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Lists all the allocations available to a server and whether
-        they are currently assigned as the primary for this server.
+      title: 'List network allocations'
       description: ''
       authenticated: false
       deprecated: false
@@ -10701,8 +10850,10 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new allocation for a server.'
-      description: s.
+      title: |-
+        Create allocation
+        s.
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -10744,7 +10895,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Set the notes for an allocation.'
+      title: 'Update allocation notes'
       description: ''
       authenticated: false
       deprecated: false
@@ -10811,7 +10962,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Set the primary allocation for a server.'
+      title: 'Set primary allocation'
       description: ''
       authenticated: false
       deprecated: false
@@ -10866,7 +11017,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Delete an allocation from a server.'
+      title: 'Delete allocation'
       description: ''
       authenticated: false
       deprecated: false
@@ -10921,7 +11072,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Return the users associated with this server instance.'
+      title: 'List server subusers'
       description: ''
       authenticated: false
       deprecated: false
@@ -10974,7 +11125,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Create a new subuser for the given server.'
+      title: 'Create a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -11043,7 +11194,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns a single subuser associated with this server instance.'
+      title: 'View a single subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -11108,7 +11259,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Update a given subuser in the system for the server.'
+      title: 'Update a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -11177,7 +11328,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Removes a subusers from a server's assignment."
+      title: 'Delete a subuser'
       description: ''
       authenticated: false
       deprecated: false
@@ -11232,7 +11383,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'List jobs'
       description: ''
       authenticated: false
       deprecated: false
@@ -11285,7 +11436,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Create a job'
       description: ''
       authenticated: false
       deprecated: false
@@ -11328,7 +11479,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'View a job'
       description: ''
       authenticated: false
       deprecated: false
@@ -11393,7 +11544,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Cancel a job'
       description: ''
       authenticated: false
       deprecated: false
@@ -11448,7 +11599,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'List backups'
       description: ''
       authenticated: false
       deprecated: false
@@ -11501,7 +11652,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Create a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -11541,7 +11692,7 @@ endpoints:
         name: is_locked
         description: ''
         required: false
-        example: false
+        example: true
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -11560,7 +11711,7 @@ endpoints:
         deprecated: false
     cleanBodyParameters:
       name: b
-      is_locked: false
+      is_locked: true
       ignored: architecto
     fileParameters: []
     responses: []
@@ -11580,7 +11731,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Delete all backups'
       description: ''
       authenticated: false
       deprecated: false
@@ -11623,7 +11774,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Bulk delete backups'
       description: ''
       authenticated: false
       deprecated: false
@@ -11666,7 +11817,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'View a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -11731,7 +11882,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Download a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -11796,7 +11947,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Restore a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -11851,7 +12002,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Rename a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -11918,7 +12069,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Toggle backup lock'
       description: ''
       authenticated: false
       deprecated: false
@@ -11973,7 +12124,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Delete a backup'
       description: ''
       authenticated: false
       deprecated: false
@@ -12028,7 +12179,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns the startup information for the server including all the variables.'
+      title: 'Get server startup config'
       description: ''
       authenticated: false
       deprecated: false
@@ -12081,7 +12232,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates a single variable for a server.'
+      title: 'Update startup variable'
       description: ''
       authenticated: false
       deprecated: false
@@ -12147,7 +12298,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates the startup command for a server.'
+      title: 'Update startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -12202,7 +12353,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: "Returns the default startup command for the server's egg."
+      title: 'Get default startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -12255,7 +12406,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Process a startup command with variables for live preview.'
+      title: 'Preview startup command'
       description: ''
       authenticated: false
       deprecated: false
@@ -12298,7 +12449,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Rename server'
       description: ''
       authenticated: false
       deprecated: false
@@ -12365,7 +12516,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Reinstall server'
       description: ''
       authenticated: false
       deprecated: false
@@ -12408,7 +12559,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Preview egg change'
       description: ''
       authenticated: false
       deprecated: false
@@ -12475,8 +12626,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Apply egg configuration changes asynchronously.'
-      description: 'This dispatches a background job to handle the complete egg change process.'
+      title: 'Apply egg change'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -12560,7 +12711,7 @@ endpoints:
         name: should_backup
         description: ''
         required: false
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -12584,7 +12735,7 @@ endpoints:
       startup_command: g
       environment:
         - z
-      should_backup: true
+      should_backup: false
       should_wipe: false
     fileParameters: []
     responses: []
@@ -12604,7 +12755,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'List server operations'
       description: ''
       authenticated: false
       deprecated: false
@@ -12657,7 +12808,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Get operation status'
       description: ''
       authenticated: false
       deprecated: false
@@ -12722,10 +12873,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Authenticate a set of credentials and return the associated server details
-        for a SFTP connection on the daemon. This supports both public key and password
-        based credentials.
+      title: 'Authenticate SFTP credentials'
       description: ''
       authenticated: false
       deprecated: false
@@ -12794,7 +12942,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Lists all servers with their configurations that are assigned to the requesting node.'
+      title: 'List all servers for a node'
       description: ''
       authenticated: false
       deprecated: false
@@ -12843,11 +12991,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Resets the state of all servers on the node to be normal. This is triggered
-        when Wings restarts and is useful for ensuring that any servers on the node
-        do not get incorrectly stuck in installing/restoring from backup states since
-        a Wings reboot would completely stop those processes.
+      title: 'Reset all server states on node'
       description: ''
       authenticated: false
       deprecated: false
@@ -12878,7 +13022,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Process server activity events'
       description: ''
       authenticated: false
       deprecated: false
@@ -12993,9 +13137,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Returns details about the server that allows Wings to self-recover and ensure
-        that the state of the server matches the Panel at all times.
+      title: 'Get server details for Wings'
       description: ''
       authenticated: false
       deprecated: false
@@ -13056,7 +13198,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns installation information for a server.'
+      title: 'Get server install info'
       description: ''
       authenticated: false
       deprecated: false
@@ -13117,7 +13259,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates the installation state of a server.'
+      title: 'Report server install result'
       description: ''
       authenticated: false
       deprecated: false
@@ -13184,8 +13326,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Get rustic configuration for a server.'
-      description: 'This endpoint is called by Wings to get the rustic backup configuration.'
+      title: 'Get rustic backup config'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -13245,10 +13387,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Updates backup sizes after deduplication recalculation from Elytra.'
-      description: |-
-        This endpoint is called when Rustic backups are deleted and remaining
-        backup sizes need to be recalculated to account for deduplication.
+      title: 'Update backup sizes after dedup'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -13340,7 +13480,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'The daemon notifies us about a transfer failure.'
+      title: 'Notify transfer failure'
       description: ''
       authenticated: false
       deprecated: false
@@ -13401,7 +13541,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'The daemon notifies us about a transfer success.'
+      title: 'Notify transfer success'
       description: ''
       authenticated: false
       deprecated: false
@@ -13462,7 +13602,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'The daemon notifies us about a transfer failure.'
+      title: 'Notify transfer failure'
       description: ''
       authenticated: false
       deprecated: false
@@ -13505,7 +13645,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'The daemon notifies us about a transfer success.'
+      title: 'Notify transfer success'
       description: ''
       authenticated: false
       deprecated: false
@@ -13548,7 +13688,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Returns the required presigned urls to upload a backup to S3 cloud storage.'
+      title: 'Get presigned S3 upload URLs'
       description: ''
       authenticated: false
       deprecated: false
@@ -13609,7 +13749,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Handles the deletion of a backup from the remote daemon.'
+      title: 'Delete a backup from daemon'
       description: ''
       authenticated: false
       deprecated: false
@@ -13652,7 +13792,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: 'Handles updating the state of a backup.'
+      title: 'Report backup status'
       description: ''
       authenticated: false
       deprecated: false
@@ -13681,7 +13821,7 @@ endpoints:
         name: successful
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -13765,7 +13905,7 @@ endpoints:
         nullable: false
         deprecated: false
     cleanBodyParameters:
-      successful: true
+      successful: false
       checksum: architecto
       checksum_type: architecto
       size: 4326.41688
@@ -13792,13 +13932,8 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: |-
-        Handles toggling the restoration status of a server. The server status field should be
-        set back to null, even if the restoration failed. This is not an unsolvable state for
-        the server, and the user can keep trying to restore, or just use the reinstall button.
-      description: |-
-        The only thing the successful field does is update the entry value for the audit logs
-        table tracking for this restoration.
+      title: 'Report backup restore result'
+      description: ''
       authenticated: false
       deprecated: false
     headers:
@@ -13840,7 +13975,7 @@ endpoints:
       groupDescription: ''
       subgroup: ''
       subgroupDescription: ''
-      title: ''
+      title: 'Report job completion status'
       description: ''
       authenticated: false
       deprecated: false
@@ -13869,7 +14004,7 @@ endpoints:
         name: successful
         description: ''
         required: true
-        example: true
+        example: false
         type: boolean
         enumValues: []
         exampleWasSpecified: false
@@ -13891,7 +14026,7 @@ endpoints:
         name: status
         description: ''
         required: false
-        example: running
+        example: pending
         type: string
         enumValues:
           - pending
@@ -14023,9 +14158,9 @@ endpoints:
         nullable: true
         deprecated: false
     cleanBodyParameters:
-      successful: true
+      successful: false
       job_type: architecto
-      status: running
+      status: pending
       message: architecto
       error_message: architecto
       progress: 22
