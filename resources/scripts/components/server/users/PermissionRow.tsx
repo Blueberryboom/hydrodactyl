@@ -1,5 +1,5 @@
-import { useField } from 'formik';
 import { useStoreState } from 'easy-peasy';
+import { useField } from 'formik';
 
 import { Checkbox } from '@/components/elements/CheckboxNew';
 
