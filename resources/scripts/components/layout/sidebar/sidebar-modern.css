@@ -33,17 +33,22 @@ body[data-sidebar-minimized] {
 .sidebar-container {
     width: var(--sidebar-width);
 }
+.sidebar-logo-container {
+    box-sizing: border-box;
+    padding-left: var(--sidebar-padding);
+    width: calc(var(--sidebar-width) + 2.5rem);
+}
 .sidebar-logo-container,
 .sidebar-container {
     transition: width var(--sidebar-transition-sidebar);
 }
-body[data-sidebar-minimized="true"] .sidebar-logo-container {
-    width: calc(var(--sidebar-width));
+.sidebar-logo-link {
+    left: calc(var(--sidebar-width) / 2);
+    position: absolute;
+    transform: translateX(-50%);
 }
-body[data-sidebar-minimized="false"] .sidebar-logo-container {
-    /* -40px because the padding is 20px (px-5)
-       this puts the toggle button in line with the items */
-    width: calc(var(--sidebar-width) - 2.5rem);
+.sidebar-toggle-button {
+    margin-left: auto;
 }
 
 .sidebar-indicator {
