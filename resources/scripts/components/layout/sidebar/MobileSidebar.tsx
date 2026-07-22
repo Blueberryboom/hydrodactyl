@@ -36,13 +36,14 @@ const MobileSidebarPanel = memo<{ navItems: NavItemData[] }>(({ navItems }) => {
     }, [location.pathname, setMobileOpen]);
 
     useEffect(() => {
-        if (isMobileOpen) {
-            const prev = document.body.style.overflow;
-            document.body.style.overflow = 'hidden';
-            return () => {
-                document.body.style.overflow = prev;
-            };
-        }
+        if (!isMobileOpen) return;
+
+        const previousOverflow = document.body.style.overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = previousOverflow;
+        };
     }, [isMobileOpen]);
 
     if (!isMobileOpen) return null;
@@ -57,6 +58,7 @@ const MobileSidebarPanel = memo<{ navItems: NavItemData[] }>(({ navItems }) => {
                 aria-hidden='true'
                 tabIndex={-1}
             />
+
             <div
                 className={cn(
                     'sidebar-container absolute top-0 left-0 h-full w-[300px] max-w-[85vw] shrink-0',
@@ -65,15 +67,16 @@ const MobileSidebarPanel = memo<{ navItems: NavItemData[] }>(({ navItems }) => {
                 )}
                 data-sidebar-minimized='false'
             >
-                <div className='sidebar-logo-container h-[64px] items-center mx-5 flex flex-none'>
+                <div className='mobile-sidebar-logo h-16 flex items-center flex-none'>
                     <NavLink
-                        to={'/'}
-                        className='flex items-center shrink-0 h-8 w-fit hydrodactyl-logo'
-                        aria-label='Hydrodactyl'
+                        to='/'
+                        className='flex h-8 w-fit shrink-0 items-center hydrodactyl-logo'
+                        aria-label='Hydrodactyl home page'
                     >
-                        <Logo />
+                        <Logo className='h-8 w-8 shrink-0 object-contain' />
                     </NavLink>
                 </div>
+
                 <ul className='flex flex-col text-sm'>
                     {navItems.map((item, index) => (
                         <li key={item.tabName} data-tab={item.tabName}>
@@ -94,6 +97,7 @@ const MobileSidebarPanel = memo<{ navItems: NavItemData[] }>(({ navItems }) => {
         </div>
     );
 });
+
 MobileSidebarPanel.displayName = 'MobileSidebarPanel';
 
 const MobileSidebarToggle = memo(() => {
@@ -110,6 +114,7 @@ const MobileSidebarToggle = memo(() => {
         </button>
     );
 });
+
 MobileSidebarToggle.displayName = 'MobileSidebarToggle';
 
 export default function MobileSidebar({ navItems }: MobileSidebarProps) {
