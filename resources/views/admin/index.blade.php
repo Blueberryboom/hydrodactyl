@@ -29,7 +29,7 @@
   <div id="admin-dashboard"></div>
   <div class="row">
     <div class="col-xs-6 col-sm-3 text-center">
-    <a href="https://discord.gg/mnTJVSSaKp"><button class="btn btn-warning" style="width:100%;"><i
+    <a href="https://discord.gg/HmSeFTNas4"><button class="btn btn-warning" style="width:100%;"><i
         class="fa fa-fw fa-support"></i> Get Help <small>(via Discord)</small></button></a>
     </div>
     <div class="col-xs-6 col-sm-3 text-center">
