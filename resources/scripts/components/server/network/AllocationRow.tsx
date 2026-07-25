@@ -1,6 +1,7 @@
 import { AntennaSignal, Check, CrownDiamond, TrashBin, Xmark } from '@gravity-ui/icons';
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import isEqual from 'react-fast-compare';
+import { toast } from 'sonner';
 import type { Allocation } from '@/api/server/getServer';
 import deleteServerAllocation from '@/api/server/network/deleteServerAllocation';
 import setPrimaryServerAllocation from '@/api/server/network/setPrimaryServerAllocation';
@@ -15,7 +16,6 @@ import Spinner from '@/components/elements/Spinner';
 import { Button } from '@/components/ui/button';
 import { ip } from '@/lib/formatters';
 import { useFlashKey } from '@/plugins/useFlash';
-import { toast } from 'sonner';
 import { ServerContext } from '@/state/server';
 
 interface Props {

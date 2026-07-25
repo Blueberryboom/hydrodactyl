@@ -40,7 +40,8 @@ const BottomNav = memo(({ items }: BottomNavProps) => {
                     const external = /^https?:\/\//i.test(item.to);
                     const active = !external && isActive(item.to, item.end);
                     const label = item.minimizedText ?? item.text;
-                    const className = 'group flex w-full flex-col items-center justify-center gap-1 py-2 touch-manipulation';
+                    const className =
+                        'group flex w-full flex-col items-center justify-center gap-1 py-2 touch-manipulation';
                     const content = (
                         <>
                             <HugeiconsIcon
