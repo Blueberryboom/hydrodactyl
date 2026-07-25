@@ -15,6 +15,7 @@ import Spinner from '@/components/elements/Spinner';
 import { Button } from '@/components/ui/button';
 import { ip } from '@/lib/formatters';
 import { useFlashKey } from '@/plugins/useFlash';
+import { toast } from 'sonner';
 import { ServerContext } from '@/state/server';
 
 interface Props {
@@ -75,10 +76,12 @@ const AllocationRow = ({ allocation }: Props) => {
         clearFlashes();
         mutate((data) => data?.map((a) => ({ ...a, isDefault: a.id === allocation.id })), false);
 
-        setPrimaryServerAllocation(uuid, allocation.id).catch((error) => {
-            clearAndAddHttpError(error);
-            mutate();
-        });
+        setPrimaryServerAllocation(uuid, allocation.id)
+            .then(() => toast.success('Allocation set as primary.'))
+            .catch((error) => {
+                clearAndAddHttpError(error);
+                mutate();
+            });
     };
 
     const deleteAllocation = () => {
