@@ -374,7 +374,7 @@ const UnifiedRouter = () => {
                         <div className='flex flex-col lg:flex-row h-full w-full overflow-hidden relative'>
                             <Sidebar navItems={navItems} bottomNavItems={bottomNavItems} className='hidden lg:flex' />
                             <MobileSidebar navItems={navItems} bottomNavItems={bottomNavItems} />
-                            <BottomNav items={[...navItems, ...bottomNavItems]} />
+                            <BottomNav items={navItems} />
 
                             {/* server-specific components - only render when we have server data */}
                             {isServerRoute && uuid && id && (
