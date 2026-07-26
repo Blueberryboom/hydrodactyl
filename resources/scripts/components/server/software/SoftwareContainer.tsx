@@ -58,7 +58,7 @@ const SoftwareContainer = () => {
     const [currentOperationId, setCurrentOperationId] = useState<string | null>(null);
     const [showOperationModal, setShowOperationModal] = useState(false);
     const [showWipeConfirmation, setShowWipeConfirmation] = useState(false);
-    const [wipeCountdown, setWipeCountdown] = useState(5);
+    const [wipeCountdown, setWipeCountdown] = useState(3);
     const [wipeLoading, setWipeLoading] = useState(false);
     const [shiftPressed, setShiftPressed] = useState(false);
 
@@ -120,7 +120,7 @@ const SoftwareContainer = () => {
 
     useEffect(() => {
         if (showWipeConfirmation) {
-            setWipeCountdown(5);
+            setWipeCountdown(3);
         }
     }, [showWipeConfirmation]);
 

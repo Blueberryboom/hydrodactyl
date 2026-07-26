@@ -8,6 +8,7 @@ import {
     type SubdomainInfo,
     setSubdomain,
 } from '@/api/server/network/subdomain';
+import { Dialog } from '@/components/elements/dialog';
 import FormikFieldWrapper from '@/components/elements/FormikFieldWrapper';
 import FlashMessageRender from '@/components/FlashMessageRender';
 import { Button } from '@/components/ui/button';
@@ -71,6 +72,8 @@ const SubdomainManagement = ({ onClose: _onClose }: Props) => {
     const [loading, setLoading] = useState(false);
     const [subdomainInfo, setSubdomainInfo] = useState<SubdomainInfo | null>(null);
     const [checkingAvailability, setCheckingAvailability] = useState(false);
+    const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [deleteCountdown, setDeleteCountdown] = useState(3);
     const [availabilityStatus, setAvailabilityStatus] = useState<{
         checked: boolean;
         available: boolean;
@@ -156,6 +159,24 @@ const SubdomainManagement = ({ onClose: _onClose }: Props) => {
         };
     }, []);
 
+    useEffect(() => {
+        if (!showDeleteDialog) {
+            return;
+        }
+
+        setDeleteCountdown(3);
+    }, [showDeleteDialog]);
+
+    useEffect(() => {
+        if (!showDeleteDialog || deleteCountdown <= 0) {
+            return;
+        }
+
+        const timeout = window.setTimeout(() => setDeleteCountdown((value) => value - 1), 1000);
+
+        return () => window.clearTimeout(timeout);
+    }, [deleteCountdown, showDeleteDialog]);
+
     const handleSetSubdomain = async (
         values: SubdomainFormValues,
         { setSubmitting, resetForm }: FormikHelpers<SubdomainFormValues>,
@@ -180,20 +201,13 @@ const SubdomainManagement = ({ onClose: _onClose }: Props) => {
     };
 
     const handleDeleteSubdomain = async () => {
-        if (
-            !confirm(
-                'Are you sure you want to delete this subdomain? This will remove all associated DNS records and cannot be undone.',
-            )
-        ) {
-            return;
-        }
-
         try {
             clearFlashes();
             setLoading(true);
             await deleteSubdomain(uuid);
             await loadSubdomainInfo();
             setAvailabilityStatus(null);
+            setShowDeleteDialog(false);
         } catch (error) {
             clearAndAddHttpError(error as Error);
         } finally {
@@ -244,157 +258,198 @@ const SubdomainManagement = ({ onClose: _onClose }: Props) => {
     }
 
     return (
-        <div>
-            {subdomainInfo?.current_subdomain && (
-                <div className='flex items-center gap-2 text-sm mb-4'>
-                    <div
-                        className={`w-2 h-2 rounded-full ${subdomainInfo.current_subdomain.attributes.is_active ? 'bg-green-400' : 'bg-red-400'}`}
-                    ></div>
-                    <span
-                        className={
-                            subdomainInfo.current_subdomain.attributes.is_active ? 'text-green-400' : 'text-red-400'
-                        }
-                    >
-                        {subdomainInfo.current_subdomain.attributes.is_active ? 'Active' : 'Inactive'}
-                    </span>
-                </div>
-            )}
+        <>
+            <Dialog.Confirm
+                open={showDeleteDialog}
+                onClose={() => setShowDeleteDialog(false)}
+                title='Delete Subdomain'
+                confirm={deleteCountdown > 0 ? `Delete Subdomain (${deleteCountdown}s)` : 'Delete Subdomain'}
+                loading={loading}
+                disabled={deleteCountdown > 0}
+                onConfirmed={handleDeleteSubdomain}
+            >
+                Are you sure you want to delete this subdomain? This will remove all associated DNS records and cannot
+                be undone.
+            </Dialog.Confirm>
+            <div>
+                {subdomainInfo?.current_subdomain && (
+                    <div className='flex items-center gap-2 text-sm mb-4'>
+                        <div
+                            className={`w-2 h-2 rounded-full ${subdomainInfo.current_subdomain.attributes.is_active ? 'bg-green-400' : 'bg-red-400'}`}
+                        ></div>
+                        <span
+                            className={
+                                subdomainInfo.current_subdomain.attributes.is_active ? 'text-green-400' : 'text-red-400'
+                            }
+                        >
+                            {subdomainInfo.current_subdomain.attributes.is_active ? 'Active' : 'Inactive'}
+                        </span>
+                    </div>
+                )}
 
-            <FlashMessageRender byKey={'server:network:subdomain'} />
+                <FlashMessageRender byKey={'server:network:subdomain'} />
 
-            {subdomainInfo?.current_subdomain && !isEditing ? (
-                /* Current Subdomain Display Mode */
-                <div className='space-y-4'>
-                    <div className='bg-[#ffffff08] border border-[#ffffff15] rounded-lg p-4'>
-                        <div className='flex items-center justify-between'>
-                            <div>
-                                <p className='text-sm text-zinc-400 mb-2'>Current Subdomain</p>
-                                <p className='text-lg font-medium text-white font-mono'>
-                                    {subdomainInfo?.current_subdomain?.attributes?.full_domain}
-                                </p>
+                {subdomainInfo?.current_subdomain && !isEditing ? (
+                    /* Current Subdomain Display Mode */
+                    <div className='space-y-4'>
+                        <div className='bg-[#ffffff08] border border-[#ffffff15] rounded-lg p-4'>
+                            <div className='flex items-center justify-between'>
+                                <div>
+                                    <p className='text-sm text-zinc-400 mb-2'>Current Subdomain</p>
+                                    <p className='text-lg font-medium text-white font-mono'>
+                                        {subdomainInfo?.current_subdomain?.attributes?.full_domain}
+                                    </p>
+                                </div>
                             </div>
                         </div>
+                        <div className='flex items-center justify-end gap-3 pt-4 border-t border-[#ffffff15]'>
+                            <Button
+                                type='button'
+                                variant='attention'
+                                onClick={() => setShowDeleteDialog(true)}
+                                disabled={loading}
+                            >
+                                {loading ? 'Deleting...' : 'Delete Subdomain'}
+                            </Button>
+                            <Button
+                                type='button'
+                                variant='secondary'
+                                onClick={() => setIsEditing(true)}
+                                disabled={loading}
+                            >
+                                Edit Subdomain
+                            </Button>
+                        </div>
                     </div>
-                    <div className='flex items-center justify-end gap-3 pt-4 border-t border-[#ffffff15]'>
-                        <Button type='button' variant='attention' onClick={handleDeleteSubdomain} disabled={loading}>
-                            {loading ? 'Deleting...' : 'Delete Subdomain'}
-                        </Button>
-                        <Button type='button' variant='secondary' onClick={() => setIsEditing(true)} disabled={loading}>
-                            Edit Subdomain
-                        </Button>
-                    </div>
-                </div>
-            ) : (
-                /* Form Mode (Create or Edit) */
-                <Formik
-                    initialValues={{
-                        subdomain: subdomainInfo?.current_subdomain?.attributes?.subdomain || '',
-                        domain_id:
-                            subdomainInfo?.current_subdomain?.attributes?.domain_id?.toString() ||
-                            (subdomainInfo?.available_domains as AvailableDomain[])
-                                ?.find((d) => d.is_default)
-                                ?.id.toString() ||
-                            subdomainInfo?.available_domains?.[0]?.id.toString() ||
-                            '',
-                    }}
-                    validationSchema={validationSchema}
-                    onSubmit={handleSetSubdomain}
-                    enableReinitialize
-                >
-                    {({ values, setFieldValue, isSubmitting, isValid, errors: _errors, resetForm }) => (
-                        <Form className='space-y-6'>
-                            <div className='space-y-4'>
-                                <FormikFieldWrapper
-                                    name='subdomain'
-                                    label='Subdomain'
-                                    description='Choose a unique name for your subdomain. Only lowercase letters, numbers, and hyphens are allowed.'
-                                >
-                                    <div className='flex items-center border border-[#ffffff15] overflow-hidden hover:border-[#ffffff25] transition-colors'>
-                                        <Field
-                                            as={CleanInput}
-                                            name='subdomain'
-                                            placeholder='myserver'
-                                            className='flex-1 px-4 py-3'
-                                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                                                const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
-                                                setFieldValue('subdomain', value);
-                                                if (values.domain_id && value.trim()) {
-                                                    debouncedCheckAvailability(value, values.domain_id);
-                                                } else {
-                                                    setAvailabilityStatus(null);
-                                                    if (debounceTimeoutRef.current) {
-                                                        clearTimeout(debounceTimeoutRef.current);
-                                                    }
-                                                }
-                                            }}
-                                        />
-                                        <div className='border-l border-[#ffffff15]'>
+                ) : (
+                    /* Form Mode (Create or Edit) */
+                    <Formik
+                        initialValues={{
+                            subdomain: subdomainInfo?.current_subdomain?.attributes?.subdomain || '',
+                            domain_id:
+                                subdomainInfo?.current_subdomain?.attributes?.domain_id?.toString() ||
+                                (subdomainInfo?.available_domains as AvailableDomain[])
+                                    ?.find((d) => d.is_default)
+                                    ?.id.toString() ||
+                                subdomainInfo?.available_domains?.[0]?.id.toString() ||
+                                '',
+                        }}
+                        validationSchema={validationSchema}
+                        onSubmit={handleSetSubdomain}
+                        enableReinitialize
+                    >
+                        {({ values, setFieldValue, isSubmitting, isValid, errors: _errors, resetForm }) => (
+                            <Form className='space-y-6'>
+                                <div className='space-y-4'>
+                                    <FormikFieldWrapper
+                                        name='subdomain'
+                                        label='Subdomain'
+                                        description='Choose a unique name for your subdomain. Only lowercase letters, numbers, and hyphens are allowed.'
+                                    >
+                                        <div className='flex items-center border border-[#ffffff15] overflow-hidden hover:border-[#ffffff25] transition-colors'>
                                             <Field
-                                                as={CleanSelect}
-                                                name='domain_id'
-                                                className='min-w-[140px] px-4 py-3'
-                                                onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
-                                                    const value = e.target.value;
-                                                    setFieldValue('domain_id', value);
-                                                    if (values.subdomain?.trim()) {
-                                                        debouncedCheckAvailability(values.subdomain, value);
+                                                as={CleanInput}
+                                                name='subdomain'
+                                                placeholder='myserver'
+                                                className='flex-1 px-4 py-3'
+                                                onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                                                    const value = e.target.value
+                                                        .toLowerCase()
+                                                        .replace(/[^a-z0-9-]/g, '');
+                                                    setFieldValue('subdomain', value);
+                                                    if (values.domain_id && value.trim()) {
+                                                        debouncedCheckAvailability(value, values.domain_id);
+                                                    } else {
+                                                        setAvailabilityStatus(null);
+                                                        if (debounceTimeoutRef.current) {
+                                                            clearTimeout(debounceTimeoutRef.current);
+                                                        }
                                                     }
                                                 }}
-                                            >
-                                                {(subdomainInfo?.available_domains as AvailableDomain[])?.map(
-                                                    (domain) => (
-                                                        <option key={domain.id} value={domain.id}>
-                                                            .{domain.name}
-                                                        </option>
-                                                    ),
-                                                ) || []}
-                                            </Field>
-                                        </div>
-                                    </div>
-                                </FormikFieldWrapper>
-
-                                {/* Availability Status */}
-                                {(checkingAvailability || availabilityStatus) && (
-                                    <div
-                                        className={`rounded-lg p-4 border ${checkingAvailability ? 'bg-blue-500/10 border-blue-500/20' : availabilityStatus?.available ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}
-                                    >
-                                        {checkingAvailability ? (
-                                            <div className='flex items-center text-sm text-blue-300'>
-                                                <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-3'></div>
-                                                Checking availability...
-                                            </div>
-                                        ) : (
-                                            availabilityStatus && (
-                                                <div
-                                                    className={`text-sm flex items-center font-medium ${availabilityStatus.available ? 'text-green-300' : 'text-red-300'}`}
+                                            />
+                                            <div className='border-l border-[#ffffff15]'>
+                                                <Field
+                                                    as={CleanSelect}
+                                                    name='domain_id'
+                                                    className='min-w-[140px] px-4 py-3'
+                                                    onChange={(e: React.ChangeEvent<HTMLSelectElement>) => {
+                                                        const value = e.target.value;
+                                                        setFieldValue('domain_id', value);
+                                                        if (values.subdomain?.trim()) {
+                                                            debouncedCheckAvailability(values.subdomain, value);
+                                                        }
+                                                    }}
                                                 >
-                                                    <div
-                                                        className={`w-3 h-3 rounded-full mr-3 ${availabilityStatus.available ? 'bg-green-400' : 'bg-red-400'}`}
-                                                    ></div>
-                                                    {availabilityStatus.message}
-                                                </div>
-                                            )
-                                        )}
-                                    </div>
-                                )}
-                            </div>
+                                                    {(subdomainInfo?.available_domains as AvailableDomain[])?.map(
+                                                        (domain) => (
+                                                            <option key={domain.id} value={domain.id}>
+                                                                .{domain.name}
+                                                            </option>
+                                                        ),
+                                                    ) || []}
+                                                </Field>
+                                            </div>
+                                        </div>
+                                    </FormikFieldWrapper>
 
-                            {/* Action Buttons */}
-                            <div className='flex items-center justify-end gap-3 pt-6 border-t border-[#ffffff15]'>
-                                {isEditing ? (
-                                    <>
-                                        <Button
-                                            type='button'
-                                            variant='secondary'
-                                            onClick={() => {
-                                                setIsEditing(false);
-                                                resetForm();
-                                                setAvailabilityStatus(null);
-                                            }}
-                                            disabled={isSubmitting || loading}
+                                    {/* Availability Status */}
+                                    {(checkingAvailability || availabilityStatus) && (
+                                        <div
+                                            className={`rounded-lg p-4 border ${checkingAvailability ? 'bg-blue-500/10 border-blue-500/20' : availabilityStatus?.available ? 'bg-green-500/10 border-green-500/20' : 'bg-red-500/10 border-red-500/20'}`}
                                         >
-                                            Cancel
-                                        </Button>
+                                            {checkingAvailability ? (
+                                                <div className='flex items-center text-sm text-blue-300'>
+                                                    <div className='animate-spin rounded-full h-4 w-4 border-b-2 border-blue-400 mr-3'></div>
+                                                    Checking availability...
+                                                </div>
+                                            ) : (
+                                                availabilityStatus && (
+                                                    <div
+                                                        className={`text-sm flex items-center font-medium ${availabilityStatus.available ? 'text-green-300' : 'text-red-300'}`}
+                                                    >
+                                                        <div
+                                                            className={`w-3 h-3 rounded-full mr-3 ${availabilityStatus.available ? 'bg-green-400' : 'bg-red-400'}`}
+                                                        ></div>
+                                                        {availabilityStatus.message}
+                                                    </div>
+                                                )
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Action Buttons */}
+                                <div className='flex items-center justify-end gap-3 pt-6 border-t border-[#ffffff15]'>
+                                    {isEditing ? (
+                                        <>
+                                            <Button
+                                                type='button'
+                                                variant='secondary'
+                                                onClick={() => {
+                                                    setIsEditing(false);
+                                                    resetForm();
+                                                    setAvailabilityStatus(null);
+                                                }}
+                                                disabled={isSubmitting || loading}
+                                            >
+                                                Cancel
+                                            </Button>
+                                            <Button
+                                                type='submit'
+                                                variant='secondary'
+                                                disabled={
+                                                    isSubmitting ||
+                                                    loading ||
+                                                    !isValid ||
+                                                    !values.subdomain.trim() ||
+                                                    !values.domain_id ||
+                                                    (availabilityStatus?.checked && !availabilityStatus?.available)
+                                                }
+                                            >
+                                                {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                            </Button>
+                                        </>
+                                    ) : (
                                         <Button
                                             type='submit'
                                             variant='secondary'
@@ -407,31 +462,16 @@ const SubdomainManagement = ({ onClose: _onClose }: Props) => {
                                                 (availabilityStatus?.checked && !availabilityStatus?.available)
                                             }
                                         >
-                                            {isSubmitting ? 'Saving...' : 'Save Changes'}
+                                            {isSubmitting ? 'Creating...' : 'Create Subdomain'}
                                         </Button>
-                                    </>
-                                ) : (
-                                    <Button
-                                        type='submit'
-                                        variant='secondary'
-                                        disabled={
-                                            isSubmitting ||
-                                            loading ||
-                                            !isValid ||
-                                            !values.subdomain.trim() ||
-                                            !values.domain_id ||
-                                            (availabilityStatus?.checked && !availabilityStatus?.available)
-                                        }
-                                    >
-                                        {isSubmitting ? 'Creating...' : 'Create Subdomain'}
-                                    </Button>
-                                )}
-                            </div>
-                        </Form>
-                    )}
-                </Formik>
-            )}
-        </div>
+                                    )}
+                                </div>
+                            </Form>
+                        )}
+                    </Formik>
+                )}
+            </div>
+        </>
     );
 };
 

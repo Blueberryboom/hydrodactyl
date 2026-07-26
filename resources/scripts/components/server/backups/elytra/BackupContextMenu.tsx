@@ -9,7 +9,7 @@ import {
 } from '@gravity-ui/icons';
 import { useStoreState } from 'easy-peasy';
 import { useEffect, useState } from 'react';
-import http, { httpErrorToHuman } from '@/api/http';
+import http from '@/api/http';
 import { getServerBackupDownloadUrl } from '@/api/server/backups';
 import { getGlobalDaemonType } from '@/api/server/getServer';
 import type { ServerBackup } from '@/api/server/types';
@@ -42,7 +42,7 @@ const BackupContextMenu = ({ backup }: Props) => {
     const setServerFromState = ServerContext.useStoreActions((actions) => actions.server.setServerFromState);
     const [modal, setModal] = useState('');
     const [loading, setLoading] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+    const [countdown, setCountdown] = useState(3);
     const [newName, setNewName] = useState(backup.name);
     const [deletePassword, setDeletePassword] = useState('');
     const [deleteTotpCode, setDeleteTotpCode] = useState('');
@@ -168,7 +168,7 @@ const BackupContextMenu = ({ backup }: Props) => {
             await toggleBackupLock(backup.uuid);
             setModal('');
         } catch (error) {
-            alert(httpErrorToHuman(error));
+            clearAndAddHttpError({ key: 'backups', error });
         }
     };
 
@@ -189,7 +189,7 @@ const BackupContextMenu = ({ backup }: Props) => {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (modal === 'restore' && countdown > 0) {
+        if ((modal === 'restore' || modal === 'delete') && countdown > 0) {
             interval = setInterval(() => {
                 setCountdown((prev) => prev - 1);
             }, 1000);
@@ -200,8 +200,8 @@ const BackupContextMenu = ({ backup }: Props) => {
     }, [modal, countdown]);
 
     useEffect(() => {
-        if (modal === 'restore') {
-            setCountdown(5);
+        if (modal === 'restore' || modal === 'delete') {
+            setCountdown(3);
         }
     }, [modal]);
 
@@ -442,9 +442,9 @@ const BackupContextMenu = ({ backup }: Props) => {
                     >
                         Cancel
                     </Button>
-                    <Button variant='attention' onClick={doDeletion} disabled={loading}>
+                    <Button variant='attention' onClick={doDeletion} disabled={countdown > 0 || loading}>
                         {loading && <Spinner size='small' />}
-                        {loading ? 'Deleting...' : 'Delete Backup'}
+                        {loading ? 'Deleting...' : countdown > 0 ? `Delete Backup (${countdown}s)` : 'Delete Backup'}
                     </Button>
                 </Dialog.Footer>
             </Dialog>

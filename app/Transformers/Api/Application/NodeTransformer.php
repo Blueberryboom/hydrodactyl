@@ -46,6 +46,17 @@ class NodeTransformer extends BaseTransformer
             'memory' => $resources->sum('memory'),
             'disk' => $resources->sum('disk'),
         ];
+        $memoryCapacity = $node->memory_overallocate === -1
+            ? $node->memory
+            : $node->memory * (1 + ($node->memory_overallocate / 100));
+        $diskCapacity = $node->disk_overallocate === -1
+            ? $node->disk
+            : $node->disk * (1 + ($node->disk_overallocate / 100));
+
+        $response['resource_capacity'] = [
+            'memory' => $memoryCapacity,
+            'disk' => $diskCapacity,
+        ];
 
         return $response;
     }

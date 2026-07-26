@@ -1,0 +1,27 @@
+<?php
+
+namespace Pterodactyl\Http\Requests\Api\Application\Settings;
+
+use Pterodactyl\Services\Acl\Api\AdminAcl;
+
+class UpdateAdvancedRequest extends GetSettingsRequest
+{
+    protected int $permission = AdminAcl::WRITE;
+
+    public function rules(): array
+    {
+        return [
+            'pterodactyl:guzzle:timeout' => 'required|integer|between:1,60',
+            'pterodactyl:guzzle:connect_timeout' => 'required|integer|between:1,60',
+            'pterodactyl:client_features:allocations:enabled' => 'required|in:true,false',
+            'pterodactyl:client_features:allocations:range_start' => ['nullable', 'required_if:pterodactyl:client_features:allocations:enabled,true', 'integer', 'between:1024,65535'],
+            'pterodactyl:client_features:allocations:range_end' => ['nullable', 'required_if:pterodactyl:client_features:allocations:enabled,true', 'integer', 'between:1024,65535', 'gt:pterodactyl:client_features:allocations:range_start'],
+            'pterodactyl:client_features:egg_changes:enabled' => 'required|in:true,only_same_nest,false',
+        ];
+    }
+
+    public function normalize(?array $only = null): array
+    {
+        return $this->only(array_keys($this->rules()));
+    }
+}

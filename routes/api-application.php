@@ -19,6 +19,30 @@ Route::group(['prefix' => '/panel'], function () {
     Route::get('/status', [Base\SystemStatusController::class, 'index']);
 });
 
+Route::group(['prefix' => '/settings'], function () {
+    Route::get('/', [Application\Settings\SettingsController::class, 'index']);
+    Route::patch('/', [Application\Settings\SettingsController::class, 'update']);
+    Route::get('/mail', [Application\Settings\SettingsController::class, 'mail']);
+    Route::patch('/mail', [Application\Settings\SettingsController::class, 'updateMail']);
+    Route::post('/mail/test', [Application\Settings\SettingsController::class, 'testMail']);
+    Route::get('/captcha', [Application\Settings\SettingsController::class, 'captcha']);
+    Route::patch('/captcha', [Application\Settings\SettingsController::class, 'updateCaptcha']);
+    Route::get('/advanced', [Application\Settings\SettingsController::class, 'advanced']);
+    Route::patch('/advanced', [Application\Settings\SettingsController::class, 'updateAdvanced']);
+    Route::get('/custom-navigation', [Application\Settings\SettingsController::class, 'customNavigation']);
+    Route::patch('/custom-navigation', [Application\Settings\SettingsController::class, 'updateCustomNavigation']);
+    Route::get('/logo', [Application\Settings\SettingsController::class, 'logo']);
+    Route::post('/logo', [Application\Settings\SettingsController::class, 'updateLogo']);
+    Route::patch('/logo', [Application\Settings\SettingsController::class, 'updateLogo']);
+    Route::get('/domains', [Application\Settings\SettingsController::class, 'domains']);
+    Route::post('/domains', [Application\Settings\SettingsController::class, 'storeDomain']);
+    Route::post('/domains/test', [Application\Settings\SettingsController::class, 'testDomainConnection']);
+    Route::get('/domains/schema/{provider}', [Application\Settings\SettingsController::class, 'domainProviderSchema']);
+    Route::get('/domains/{domain:id}', [Application\Settings\SettingsController::class, 'domain']);
+    Route::patch('/domains/{domain:id}', [Application\Settings\SettingsController::class, 'updateDomain']);
+    Route::delete('/domains/{domain:id}', [Application\Settings\SettingsController::class, 'deleteDomain']);
+});
+
 
 /*
 |--------------------------------------------------------------------------
@@ -134,9 +158,20 @@ Route::group(['prefix' => '/nests'], function () {
     Route::get('/', [Application\Nests\NestController::class, 'index'])->name('api.application.nests');
     Route::get('/{nest:id}', [Application\Nests\NestController::class, 'view'])->name('api.application.nests.view');
 
+    Route::post('/', [Application\Nests\NestController::class, 'store']);
+    Route::patch('/{nest:id}', [Application\Nests\NestController::class, 'update']);
+
+    Route::delete('/{nest:id}', [Application\Nests\NestController::class, 'delete']);
+
     // Egg Management Endpoint
     Route::group(['prefix' => '/{nest:id}/eggs'], function () {
         Route::get('/', [Application\Nests\EggController::class, 'index'])->name('api.application.nests.eggs');
         Route::get('/{egg:id}', [Application\Nests\EggController::class, 'view'])->name('api.application.nests.eggs.view');
+
+        Route::post('/', [Application\Nests\EggController::class, 'store']);
+        Route::patch('/{egg:id}', [Application\Nests\EggController::class, 'update']);
+        Route::delete('/{egg:id}', [Application\Nests\EggController::class, 'delete']);
+        Route::post('/import', [Application\Nests\EggController::class, 'import']);
+        Route::post('/import-url', [Application\Nests\EggController::class, 'importFromUrl']);
     });
 });

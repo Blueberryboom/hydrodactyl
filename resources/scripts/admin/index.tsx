@@ -19,6 +19,13 @@ interface SystemMetrics {
     };
 }
 
+interface OverviewData {
+    username: string;
+    totalNodes: number;
+    totalServers: number;
+    totalUsers: number;
+}
+
 function formatBytes(bytes: number): string {
     if (!bytes) return '0 B';
     const k = 1024;
@@ -35,6 +42,69 @@ function formatUptime(seconds: number): string {
 }
 
 const COLORS = { used: '#52A9FF', free: '#2D5A8A', bg: '#1E3A5A' };
+
+const overviewFallback: OverviewData = {
+    username: 'Admin',
+    totalNodes: 0,
+    totalServers: 0,
+    totalUsers: 0,
+};
+
+function readOverviewData(): OverviewData {
+    const raw = document.getElementById('admin-dashboard')?.dataset.overview;
+
+    if (!raw) {
+        return overviewFallback;
+    }
+
+    try {
+        return { ...overviewFallback, ...JSON.parse(raw) } as OverviewData;
+    } catch {
+        return overviewFallback;
+    }
+}
+
+function StatCard({ label, value, icon }: { label: string; value: string | number; icon: string }) {
+    return (
+        <div className='col-md-3 col-sm-6 col-xs-12'>
+            <div
+                className='small-box'
+                style={{
+                    background: '#1a1a1a',
+                    borderRadius: 6,
+                    minHeight: 120,
+                    overflow: 'hidden',
+                    padding: 18,
+                    position: 'relative',
+                }}
+            >
+                <div
+                    style={{
+                        color: '#999',
+                        fontSize: 12,
+                        fontWeight: 700,
+                        letterSpacing: 0.4,
+                        textTransform: 'uppercase',
+                    }}
+                >
+                    {label}
+                </div>
+                <div style={{ color: '#eee', fontSize: 30, fontWeight: 700, marginTop: 10 }}>{value}</div>
+                <i
+                    className={`fa ${icon}`}
+                    style={{
+                        bottom: 12,
+                        color: '#52A9FF',
+                        fontSize: 42,
+                        opacity: 0.22,
+                        position: 'absolute',
+                        right: 16,
+                    }}
+                />
+            </div>
+        </div>
+    );
+}
 
 function UsageBar({ used, total, label, unit }: { used: number; total: number; label: string; unit?: string }) {
     const pct = total > 0 ? (used / total) * 100 : 0;
@@ -95,6 +165,7 @@ function LoadGraph({ loads }: { loads: number[] }) {
 
 function AdminDashboard() {
     const [data, setData] = useState<SystemMetrics | null>(null);
+    const [overview] = useState(readOverviewData);
 
     const fetchMetrics = useCallback(() => {
         fetch('/api/application/panel/status')
@@ -122,6 +193,24 @@ function AdminDashboard() {
 
     return (
         <div>
+            <div className='row'>
+                <div className='col-xs-12'>
+                    <div className='box' style={{ borderTop: '3px solid #52A9FF' }}>
+                        <div className='box-body' style={{ padding: 20 }}>
+                            <h2 style={{ color: '#eee', fontSize: 24, fontWeight: 700, margin: 0 }}>
+                                Hello, {overview.username}!
+                            </h2>
+                            <p style={{ color: '#999', margin: '8px 0 0' }}>Here is a quick overview of your panel.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div className='row'>
+                <StatCard label='Total Nodes' value={overview.totalNodes.toLocaleString()} icon='fa-sitemap' />
+                <StatCard label='Total Servers' value={overview.totalServers.toLocaleString()} icon='fa-server' />
+                <StatCard label='Total Users' value={overview.totalUsers.toLocaleString()} icon='fa-users' />
+                <StatCard label='Uptime' value={formatUptime(metrics.uptime)} icon='fa-clock-o' />
+            </div>
             <div className='row'>
                 <div className='col-md-3 col-sm-6 col-xs-12'>
                     <div

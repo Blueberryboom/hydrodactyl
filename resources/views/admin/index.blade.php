@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <div id="admin-dashboard"></div>
+  <div id="admin-dashboard" data-overview='@json($overview)'></div>
   <div class="row">
     <div class="col-xs-6 col-sm-3 text-center">
     <a href="https://discord.gg/HmSeFTNas4"><button class="btn btn-warning" style="width:100%;"><i

@@ -1,7 +1,7 @@
 import { ArrowDownToLine, Bars, CloudArrowUpIn, Pencil, Shield, TrashBin } from '@gravity-ui/icons';
 import { useStoreState } from 'easy-peasy';
 import { useEffect, useState } from 'react';
-import http, { httpErrorToHuman } from '@/api/http';
+import http from '@/api/http';
 import { getServerBackupDownloadUrl } from '@/api/server/backups';
 import { getGlobalDaemonType } from '@/api/server/getServer';
 import Can from '@/components/elements/Can';
@@ -32,7 +32,7 @@ const BackupContextMenu = ({ backup }: Props) => {
     const setServerFromState = ServerContext.useStoreActions((actions) => actions.server.setServerFromState);
     const [modal, setModal] = useState('');
     const [loading, setLoading] = useState(false);
-    const [countdown, setCountdown] = useState(5);
+    const [countdown, setCountdown] = useState(3);
     const [newName, setNewName] = useState(backup.name);
     const { clearFlashes, clearAndAddHttpError } = useFlash();
     const { renameBackup, toggleBackupLock, refresh } = useUnifiedBackups();
@@ -105,7 +105,7 @@ const BackupContextMenu = ({ backup }: Props) => {
             await toggleBackupLock(backup.uuid);
             setModal('');
         } catch (error) {
-            alert(httpErrorToHuman(error));
+            clearAndAddHttpError({ key: 'backups', error });
         }
     };
 
@@ -126,7 +126,7 @@ const BackupContextMenu = ({ backup }: Props) => {
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
-        if (modal === 'restore' && countdown > 0) {
+        if ((modal === 'restore' || modal === 'delete') && countdown > 0) {
             interval = setInterval(() => {
                 setCountdown((prev) => prev - 1);
             }, 1000);
@@ -137,8 +137,8 @@ const BackupContextMenu = ({ backup }: Props) => {
     }, [modal, countdown]);
 
     useEffect(() => {
-        if (modal === 'restore') {
-            setCountdown(5);
+        if (modal === 'restore' || modal === 'delete') {
+            setCountdown(3);
         }
     }, [modal]);
 
@@ -215,7 +215,8 @@ const BackupContextMenu = ({ backup }: Props) => {
                 loading={loading}
                 description='This is a permanent operation. The backup cannot be recovered once deleted.'
                 warningItems={['The backup file and its snapshot will be permanently deleted.']}
-                confirmText='Delete Backup'
+                confirmText={countdown > 0 ? `Delete Backup (${countdown}s)` : 'Delete Backup'}
+                confirmDisabled={countdown > 0}
             />
 
             <SpinnerOverlay visible={loading} fixed />

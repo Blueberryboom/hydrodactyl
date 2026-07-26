@@ -123,6 +123,14 @@ class SettingsController extends ClientApiController
         $originalEggId = $server->egg_id;
         $originalNestId = $server->nest_id;
 
+        $setting = config('pterodactyl.client_features.egg_changes.enabled', 'true');
+        if ($setting === false || $setting === 'false') {
+            throw new BadRequestHttpException('Server software changes are not allowed.');
+        }
+        if ($setting === 'only_same_nest' && (int) $nestId !== $server->nest_id) {
+            throw new BadRequestHttpException('Server software changes are restricted to the same nest.');
+        }
+
         // Check if the new Egg and Nest IDs are different from the current ones
         if ($originalEggId !== $eggId || $originalNestId !== $nestId) {
             // Update the server's Egg and Nest IDs

@@ -17,6 +17,7 @@ interface ConfirmPasswordModalProps {
     description?: string;
     warningItems?: string[];
     confirmText?: string;
+    confirmDisabled?: boolean;
     showWarning?: boolean;
 }
 
@@ -30,6 +31,7 @@ const ConfirmPasswordModal = ({
     description,
     warningItems,
     confirmText = 'Confirm',
+    confirmDisabled = false,
     showWarning = true,
 }: ConfirmPasswordModalProps) => {
     const [password, setPassword] = useState('');
@@ -119,7 +121,7 @@ const ConfirmPasswordModal = ({
                 <Button onClick={handleClose} variant='secondary' disabled={loading}>
                     Cancel
                 </Button>
-                <Button onClick={handleConfirm} variant='attention' disabled={loading || !password}>
+                <Button onClick={handleConfirm} variant='attention' disabled={loading || !password || confirmDisabled}>
                     {loading && <Spinner size='small' />}
                     {loading ? 'Processing...' : confirmText}
                 </Button>

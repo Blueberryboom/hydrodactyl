@@ -26,10 +26,27 @@ class EggChangeService
     ) {}
 
     /**
+     * Validate the egg change restriction setting.
+     */
+    private function validateEggChangeAllowed(Server $server, int $nestId): void
+    {
+        $setting = config('pterodactyl.client_features.egg_changes.enabled', 'true');
+
+        if ($setting === false || $setting === 'false') {
+            throw new BadRequestHttpException('Server software changes are not allowed.');
+        }
+
+        if ($setting === 'only_same_nest' && (int) $nestId !== $server->nest_id) {
+            throw new BadRequestHttpException('Server software changes are restricted to the same nest.');
+        }
+    }
+
+    /**
      * Preview egg change information.
      */
     public function previewEggChange(Server $server, int $eggId, int $nestId): array
     {
+        $this->validateEggChangeAllowed($server, $nestId);
         $this->validationService->validateServerState($server);
         
         $egg = Egg::query()
@@ -87,6 +104,7 @@ class EggChangeService
         ?string $dockerImage = null,
         ?string $startupCommand = null
     ): array {
+        $this->validateEggChangeAllowed($server, $nestId);
         $this->validationService->validateCanAcceptOperation($server, 'egg_change');
         
         $egg = Egg::query()

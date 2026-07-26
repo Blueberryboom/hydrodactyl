@@ -17,16 +17,18 @@ import {
     Home01Icon,
     Link01Icon,
     NoteIcon,
+    PaintBucketIcon,
     RocketIcon,
     ServerStack02Icon,
     Settings02Icon,
     Settings04Icon,
     Store01Icon,
+    UserGroupIcon,
     UserMultiple02Icon,
 } from '@hugeicons/core-free-icons';
 import type { IconSvgElement } from '@hugeicons/react';
 import { useStoreState } from 'easy-peasy';
-import { Fragment, Suspense, useEffect, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useEffect, useRef, useState } from 'react';
 import { Route, Routes, useLocation, useParams } from 'react-router-dom';
 import { httpErrorToHuman } from '@/api/http';
 import getNests from '@/api/nests/getNests';
@@ -50,6 +52,8 @@ import { SidebarProvider } from '@/contexts/SidebarContext';
 import routes from '@/routers/routes';
 
 import { ServerContext } from '@/state/server';
+
+const AdminRouter = lazy(() => import('@/components/admin/AdminRouter'));
 
 const blank_egg_prefix = '@';
 
@@ -93,6 +97,7 @@ const UnifiedRouter = () => {
     const _params = useParams<'id'>();
     const location = useLocation();
     const isServerRoute = location.pathname.startsWith('/server/');
+    const isAdminRoute = location.pathname === '/admin' || location.pathname.startsWith('/admin/');
 
     // extract server ID from pathname for server routes
     const serverIdFromPath = isServerRoute ? location.pathname.split('/')[2] : undefined;
@@ -132,12 +137,16 @@ const UnifiedRouter = () => {
 
     // fetch nests data when component mounts
     useEffect(() => {
+        if (isAdminRoute) {
+            return;
+        }
+
         const fetchData = async () => {
             const data = await getNests();
             setNests(data);
         };
         fetchData();
-    }, []);
+    }, [isAdminRoute]);
 
     // handle server loading when navigating to server routes
     useEffect(() => {
@@ -186,6 +195,17 @@ const UnifiedRouter = () => {
     const NavigationActivity = useRef(null);
     const NavigationShell = useRef(null);
     const NavigationInstaller = useRef(null);
+    const NavigationAdminOverview = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminSettings = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminApi = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminDatabases = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminBuckets = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminLocations = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminNodes = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminServers = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminUsers = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminMounts = useRef<HTMLAnchorElement>(null);
+    const NavigationAdminNests = useRef<HTMLAnchorElement>(null);
     const CustomNavigationOne = useRef<HTMLAnchorElement>(null);
     const CustomNavigationTwo = useRef<HTMLAnchorElement>(null);
     const CustomNavigationThree = useRef<HTMLAnchorElement>(null);
@@ -326,42 +346,135 @@ const UnifiedRouter = () => {
                   },
               ]
             : [] // empty navigation when server is loading
-        : [
-              {
-                  to: '/',
-                  icon: ServerStack02Icon,
-                  text: 'Servers',
-                  tabName: 'servers',
-                  ref: NavigationServers,
-                  end: true,
-              },
-              {
-                  to: '/account/api',
-                  icon: NoteIcon,
-                  text: 'API Keys',
-                  minimizedText: 'API',
-                  tabName: 'api',
-                  ref: NavigationApi,
-                  end: true,
-              },
-              {
-                  to: '/account/ssh',
-                  icon: ComputerTerminal01Icon,
-                  text: 'SSH Keys',
-                  minimizedText: 'SSH',
-                  tabName: 'ssh',
-                  ref: NavigationSSH,
-                  end: true,
-              },
-              {
-                  to: '/account',
-                  icon: Settings02Icon,
-                  text: 'Settings',
-                  tabName: 'settings',
-                  ref: NavigationSettings,
-                  end: true,
-              },
-          ];
+        : isAdminRoute
+          ? [
+                {
+                    to: '/admin',
+                    icon: Home01Icon,
+                    text: 'Overview',
+                    tabName: 'admin-overview',
+                    ref: NavigationAdminOverview,
+                    end: true,
+                },
+                {
+                    to: '/admin/settings',
+                    icon: Settings02Icon,
+                    text: 'Settings',
+                    tabName: 'admin-settings',
+                    ref: NavigationAdminSettings,
+                    end: false,
+                },
+                {
+                    to: '/admin/api',
+                    icon: GlobeIcon,
+                    text: 'App API',
+                    minimizedText: 'API',
+                    tabName: 'admin-api',
+                    ref: NavigationAdminApi,
+                    end: false,
+                },
+                {
+                    to: '/admin/databases',
+                    icon: Database02Icon,
+                    text: 'Databases',
+                    tabName: 'admin-databases',
+                    ref: NavigationAdminDatabases,
+                    end: false,
+                },
+                {
+                    to: '/admin/buckets',
+                    icon: PaintBucketIcon,
+                    text: 'S3 Buckets',
+                    minimizedText: 'S3',
+                    tabName: 'admin-buckets',
+                    ref: NavigationAdminBuckets,
+                    end: false,
+                },
+                {
+                    to: '/admin/locations',
+                    icon: GlobeIcon,
+                    text: 'Locations',
+                    tabName: 'admin-locations',
+                    ref: NavigationAdminLocations,
+                    end: false,
+                },
+                {
+                    to: '/admin/nodes',
+                    icon: ServerStack02Icon,
+                    text: 'Nodes',
+                    tabName: 'admin-nodes',
+                    ref: NavigationAdminNodes,
+                    end: false,
+                },
+                {
+                    to: '/admin/servers',
+                    icon: ServerStack02Icon,
+                    text: 'Servers',
+                    tabName: 'admin-servers',
+                    ref: NavigationAdminServers,
+                    end: false,
+                },
+                {
+                    to: '/admin/users',
+                    icon: UserGroupIcon,
+                    text: 'Users',
+                    tabName: 'admin-users',
+                    ref: NavigationAdminUsers,
+                    end: false,
+                },
+                {
+                    to: '/admin/mounts',
+                    icon: ConnectIcon,
+                    text: 'Mounts',
+                    tabName: 'admin-mounts',
+                    ref: NavigationAdminMounts,
+                    end: false,
+                },
+                {
+                    to: '/admin/nests',
+                    icon: Store01Icon,
+                    text: 'Nests',
+                    tabName: 'admin-nests',
+                    ref: NavigationAdminNests,
+                    end: false,
+                },
+            ]
+          : [
+                {
+                    to: '/',
+                    icon: ServerStack02Icon,
+                    text: 'Servers',
+                    tabName: 'servers',
+                    ref: NavigationServers,
+                    end: true,
+                },
+                {
+                    to: '/account/api',
+                    icon: NoteIcon,
+                    text: 'API Keys',
+                    minimizedText: 'API',
+                    tabName: 'api',
+                    ref: NavigationApi,
+                    end: true,
+                },
+                {
+                    to: '/account/ssh',
+                    icon: ComputerTerminal01Icon,
+                    text: 'SSH Keys',
+                    minimizedText: 'SSH',
+                    tabName: 'ssh',
+                    ref: NavigationSSH,
+                    end: true,
+                },
+                {
+                    to: '/account',
+                    icon: Settings02Icon,
+                    text: 'Settings',
+                    tabName: 'settings',
+                    ref: NavigationSettings,
+                    end: true,
+                },
+            ];
     const bottomNavItems = customNavItems;
 
     return (
@@ -421,7 +534,7 @@ const UnifiedRouter = () => {
                                         <ErrorBoundary>
                                             <Routes>
                                                 {/* dashboard routes */}
-                                                {!isServerRoute && (
+                                                {!isServerRoute && !isAdminRoute && (
                                                     <>
                                                         <Route path='' element={<DashboardContainer />} />
                                                         {routes.account.map(({ route, component: Component }) => (
@@ -432,7 +545,9 @@ const UnifiedRouter = () => {
                                                             />
                                                         ))}
                                                     </>
-                                                )}{' '}
+                                                )}
+                                                {/* admin routes */}
+                                                {isAdminRoute && <Route path='/admin/*' element={<AdminRouter />} />}
                                                 {/* server routes */}
                                                 {isServerRoute &&
                                                     uuid &&
