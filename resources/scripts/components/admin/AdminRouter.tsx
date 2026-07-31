@@ -2,6 +2,8 @@ import { useStoreState } from 'easy-peasy';
 import { Link, Route, Routes } from 'react-router-dom';
 
 import AdminOverviewContainer from '@/components/admin/AdminOverviewContainer';
+import DatabaseHostListContainer from '@/components/admin/databases/DatabaseHostListContainer';
+import DatabaseHostViewContainer from '@/components/admin/databases/DatabaseHostViewContainer';
 import LocationCreateContainer from '@/components/admin/locations/LocationCreateContainer';
 import LocationListContainer from '@/components/admin/locations/LocationListContainer';
 import LocationViewContainer from '@/components/admin/locations/LocationViewContainer';
@@ -358,6 +360,8 @@ const implementedPaths = new Set([
     'locations',
     'locations/new',
     'locations/view/:id',
+    'databases',
+    'databases/view/:id',
     'settings',
     'settings/mail',
     'settings/advanced',
@@ -420,6 +424,8 @@ const AdminRouter = () => {
             <Route path='locations' element={<LocationListContainer />} />
             <Route path='locations/new' element={<LocationCreateContainer />} />
             <Route path='locations/view/:id' element={<LocationViewContainer />} />
+            <Route path='databases' element={<DatabaseHostListContainer />} />
+            <Route path='databases/view/:id' element={<DatabaseHostViewContainer />} />
             <Route path='settings' element={<SettingsContainer />} />
             <Route path='settings/mail' element={<MailSettingsContainer />} />
             <Route path='settings/advanced' element={<AdvancedSettingsContainer />} />

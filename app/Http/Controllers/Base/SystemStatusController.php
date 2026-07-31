@@ -114,16 +114,61 @@ class SystemStatusController extends Controller
   {
     if (PHP_OS_FAMILY === 'Darwin') {
       $cmd = "top -l 1 | grep -E '^CPU' | awk '{print $3}' | cut -d'%' -f1";
-    } else {
-      $cmd = "top -bn1 | grep 'Cpu(s)' | awk '{print $2 + $4}'";
+      $usage = shell_exec($cmd);
+      if ($usage === null) {
+        throw new \RuntimeException('Failed to get CPU usage');
+      }
+
+      return min(100.0, (float) $usage);
     }
 
-    $usage = shell_exec($cmd);
-    if ($usage === null) {
-      throw new \RuntimeException('Failed to get CPU usage');
+    $first = $this->readCpuTimes();
+    // Sample again after a short delay so we can compute a meaningful delta.
+    usleep(250000);
+    $second = $this->readCpuTimes();
+
+    if ($first === null || $second === null) {
+      throw new \RuntimeException('Failed to read CPU usage');
     }
 
-    return (float) $usage;
+    $total = $second['total'] - $first['total'];
+    $idle = $second['idle'] - $first['idle'];
+
+    if ($total <= 0) {
+      return 0.0;
+    }
+
+    $busy = max(0, $total - $idle);
+
+    return min(100.0, round(($busy / $total) * 100, 2));
+  }
+
+  private function readCpuTimes(): ?array
+  {
+    $stat = @file('/proc/stat');
+    if ($stat === false) {
+      return null;
+    }
+
+    $parts = preg_split('/\s+/', trim($stat[0] ?? ''));
+    if (count($parts) < 5) {
+      return null;
+    }
+
+    // The first line of /proc/stat is the aggregate "cpu" row. Field 0 is the
+    // "cpu" token; fields 1-3 are user, nice and system; field 4 is idle;
+    // field 5 is iowait (treated as idle time); fields 6-8 are irq, softirq
+    // and steal.
+    $idle = (int) ($parts[4] ?? 0) + (int) ($parts[5] ?? 0);
+    $total = $idle
+      + (int) ($parts[1] ?? 0)
+      + (int) ($parts[2] ?? 0)
+      + (int) ($parts[3] ?? 0)
+      + (int) ($parts[6] ?? 0)
+      + (int) ($parts[7] ?? 0)
+      + (int) ($parts[8] ?? 0);
+
+    return ['total' => $total, 'idle' => $idle];
   }
 
   private function getDiskUsage(): array

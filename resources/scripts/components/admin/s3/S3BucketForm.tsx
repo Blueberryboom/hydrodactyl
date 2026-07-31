@@ -72,9 +72,19 @@ const S3BucketForm = ({ bucket, submitLabel, onSubmit }: S3BucketFormProps) => {
                 <AdminCard className='flex flex-col gap-4'>
                     <h2 className='text-lg font-semibold'>Bucket Details</h2>
                     <AdminField id='name' label='Name' description='A unique display name for this S3 configuration.'>
-                        <input id='name' name='name' required defaultValue={bucket?.name ?? ''} className={adminInputClass} />
+                        <input
+                            id='name'
+                            name='name'
+                            required
+                            defaultValue={bucket?.name ?? ''}
+                            className={adminInputClass}
+                        />
                     </AdminField>
-                    <AdminField id='bucket_name' label='S3 Bucket Name' description='The actual bucket name on your S3 provider.'>
+                    <AdminField
+                        id='bucket_name'
+                        label='S3 Bucket Name'
+                        description='The actual bucket name on your S3 provider.'
+                    >
                         <input
                             id='bucket_name'
                             name='bucket_name'
@@ -115,7 +125,11 @@ const S3BucketForm = ({ bucket, submitLabel, onSubmit }: S3BucketFormProps) => {
                             className={adminInputClass}
                         />
                     </AdminField>
-                    <AdminField id='endpoint' label='Endpoint' description='Leave blank for AWS S3, or enter an S3-compatible endpoint URL.'>
+                    <AdminField
+                        id='endpoint'
+                        label='Endpoint'
+                        description='Leave blank for AWS S3, or enter an S3-compatible endpoint URL.'
+                    >
                         <input
                             id='endpoint'
                             name='endpoint'
@@ -137,7 +151,11 @@ const S3BucketForm = ({ bucket, submitLabel, onSubmit }: S3BucketFormProps) => {
             </div>
 
             <AdminCard className='grid gap-4 md:grid-cols-2'>
-                <AdminField id='use_path_style_endpoint' label='Use Path-Style Endpoints' description='Enable this for providers that require path-style endpoint addressing.'>
+                <AdminField
+                    id='use_path_style_endpoint'
+                    label='Use Path-Style Endpoints'
+                    description='Enable this for providers that require path-style endpoint addressing.'
+                >
                     <select
                         id='use_path_style_endpoint'
                         name='use_path_style_endpoint'
@@ -148,8 +166,17 @@ const S3BucketForm = ({ bucket, submitLabel, onSubmit }: S3BucketFormProps) => {
                         <option value='1'>Enabled</option>
                     </select>
                 </AdminField>
-                <AdminField id='enabled' label='Enabled' description='Disabled buckets cannot be selected for new backup storage.'>
-                    <select id='enabled' name='enabled' defaultValue={bucket?.enabled === false ? '0' : '1'} className={adminInputClass}>
+                <AdminField
+                    id='enabled'
+                    label='Enabled'
+                    description='Disabled buckets cannot be selected for new backup storage.'
+                >
+                    <select
+                        id='enabled'
+                        name='enabled'
+                        defaultValue={bucket?.enabled === false ? '0' : '1'}
+                        className={adminInputClass}
+                    >
                         <option value='1'>Enabled</option>
                         <option value='0'>Disabled</option>
                     </select>

@@ -52,6 +52,16 @@ Route::group(['prefix' => '/s3'], function () {
     Route::delete('/{s3:id}', [Application\S3\S3Controller::class, 'delete']);
 });
 
+Route::group(['prefix' => '/databases'], function () {
+    Route::get('/', [Application\Databases\DatabaseHostsController::class, 'index'])->name('api.application.databases');
+    Route::post('/', [Application\Databases\DatabaseHostsController::class, 'store']);
+    Route::post('/test-connection', [Application\Databases\DatabaseHostsController::class, 'testConnection']);
+    Route::get('/locations', [Application\Databases\DatabaseHostsController::class, 'locations']);
+    Route::get('/{databaseHost:id}', [Application\Databases\DatabaseHostsController::class, 'view'])->name('api.application.databases.view');
+    Route::patch('/{databaseHost:id}', [Application\Databases\DatabaseHostsController::class, 'update']);
+    Route::delete('/{databaseHost:id}', [Application\Databases\DatabaseHostsController::class, 'delete']);
+});
+
 
 /*
 |--------------------------------------------------------------------------

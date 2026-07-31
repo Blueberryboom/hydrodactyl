@@ -3,6 +3,7 @@
 namespace Pterodactyl\Transformers\Api\Application;
 
 use Pterodactyl\Models\Database;
+use Pterodactyl\Models\Server;
 use League\Fractal\Resource\Item;
 use Pterodactyl\Models\DatabaseHost;
 use League\Fractal\Resource\NullResource;
@@ -11,7 +12,7 @@ use Illuminate\Contracts\Encryption\Encrypter;
 
 class ServerDatabaseTransformer extends BaseTransformer
 {
-    protected array $availableIncludes = ['password', 'host'];
+    protected array $availableIncludes = ['password', 'host', 'server_details'];
 
     private Encrypter $encrypter;
 
@@ -59,6 +60,33 @@ class ServerDatabaseTransformer extends BaseTransformer
                 'password' => $this->encrypter->decrypt($model->password),
             ];
         }, 'database_password');
+    }
+
+    /**
+     * Return the server relationship for this server database.
+     *
+     * @throws \Pterodactyl\Exceptions\Transformer\InvalidTransformerLevelException
+     */
+    public function includeServerDetails(Database $model): Item|NullResource
+    {
+        if (!$this->authorize(AdminAcl::RESOURCE_SERVERS)) {
+            return $this->null();
+        }
+
+        $model->loadMissing('server');
+
+        return $this->item(
+            $model->getRelation('server'),
+            function (Server $model) {
+                return [
+                    'id' => $model->id,
+                    'uuid' => $model->uuid,
+                    'identifier' => $model->identifier,
+                    'name' => $model->name,
+                ];
+            },
+            Server::RESOURCE_NAME,
+        );
     }
 
     /**

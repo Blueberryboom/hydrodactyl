@@ -63,12 +63,17 @@ const S3BucketListContainer = () => {
                                     <tr key={bucket.id}>
                                         <td className='px-4 py-3 font-mono text-white/55'>{bucket.id}</td>
                                         <td className='px-4 py-3'>
-                                            <Link to={`/admin/buckets/view/${bucket.id}`} className='text-brand hover:text-brand/80'>
+                                            <Link
+                                                to={`/admin/buckets/view/${bucket.id}`}
+                                                className='text-brand hover:text-brand/80'
+                                            >
                                                 {bucket.name}
                                             </Link>
                                         </td>
                                         <td className='px-4 py-3 font-mono text-white/65'>{bucket.bucketName}</td>
-                                        <td className='px-4 py-3 text-white/65'>{bucket.endpoint ?? 'Default AWS endpoint'}</td>
+                                        <td className='px-4 py-3 text-white/65'>
+                                            {bucket.endpoint ?? 'Default AWS endpoint'}
+                                        </td>
                                         <td className='px-4 py-3'>{bucket.enabled ? 'Enabled' : 'Disabled'}</td>
                                         <td className='px-4 py-3'>{bucket.serverCount}</td>
                                     </tr>

@@ -9,6 +9,7 @@ export interface AdminOverviewStats {
     offlineServers: number;
     totalUsers: number;
     uptime: number;
+    hostname: string;
     metrics: {
         cpu: number;
         memory: {
@@ -19,10 +20,17 @@ export interface AdminOverviewStats {
             rxBytes: number;
             txBytes: number;
         };
+        disk: {
+            total: number;
+            used: number;
+        };
     };
 }
 
 interface SystemStatusResponse {
+    system: {
+        hostname: string;
+    };
     metrics: {
         uptime: number;
         cpu: number;
@@ -33,6 +41,11 @@ interface SystemStatusResponse {
         network: {
             rx_bytes: number;
             tx_bytes: number;
+        };
+        disk: {
+            total: number;
+            free: number;
+            used: number;
         };
     };
     overview: {
@@ -58,6 +71,7 @@ export const getAdminOverviewStats = async (): Promise<AdminOverviewStats> => {
         offlineServers: data.overview.offline_servers,
         totalUsers: data.overview.total_users,
         uptime: data.metrics.uptime,
+        hostname: data.system.hostname,
         metrics: {
             cpu: data.metrics.cpu,
             memory: {
@@ -67,6 +81,10 @@ export const getAdminOverviewStats = async (): Promise<AdminOverviewStats> => {
             network: {
                 rxBytes: data.metrics.network.rx_bytes,
                 txBytes: data.metrics.network.tx_bytes,
+            },
+            disk: {
+                total: data.metrics.disk.total,
+                used: data.metrics.disk.used,
             },
         },
     };

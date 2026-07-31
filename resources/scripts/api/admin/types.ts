@@ -173,3 +173,59 @@ export interface S3BucketFormPayload {
     use_path_style_endpoint: boolean;
     enabled: boolean;
 }
+
+export interface AdminDatabaseHost {
+    id: number;
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    nodeId: number | null;
+    nodeName: string | null;
+    databaseCount: number;
+    databases: AdminDatabaseHostDatabase[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AdminDatabaseHostDatabase {
+    id: number;
+    serverId: number;
+    hostId: number;
+    database: string;
+    username: string;
+    remote: string;
+    maxConnections: number | null;
+    serverName: string | null;
+    serverIdentifier: string | null;
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AdminDatabaseHostNodeOption {
+    id: number;
+    name: string;
+}
+
+export interface AdminDatabaseHostLocation {
+    id: number;
+    short: string;
+    long: string;
+    nodes: AdminDatabaseHostNodeOption[];
+}
+
+export interface DatabaseHostFormPayload {
+    name: string;
+    host: string;
+    port: number;
+    username: string;
+    password?: string;
+    node_id: number | null;
+}
+
+export interface TestDatabaseHostConnectionResponse {
+    success: boolean;
+    message: string;
+    version?: string;
+    has_grant_option?: boolean;
+}

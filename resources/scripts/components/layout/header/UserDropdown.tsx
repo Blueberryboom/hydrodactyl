@@ -50,7 +50,9 @@ export default function UserDropdown({ serverId }: UserDropdownProps) {
 
         sha256Hash(email.toLowerCase().trim())
             .then(setEmailHash)
-            .catch(() => {});
+            .catch(() => {
+                // Who reads these?
+            });
     }, [email]);
 
     const onTriggerLogout = () => {

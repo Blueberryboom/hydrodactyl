@@ -1,4 +1,6 @@
 import type {
+    AdminDatabaseHost,
+    AdminDatabaseHostDatabase,
     AdminEgg,
     AdminEggSummary,
     AdminLocation,
@@ -182,6 +184,43 @@ export const rawDataToAdminS3Bucket = (data: FractalResponseData): AdminS3Bucket
         enabled: asBoolean(attr(data, 'enabled')),
         serverCount: asNumber(attr(data, 'servers_count')) || servers.length,
         servers,
+        createdAt: asString(attr(data, 'created_at')),
+        updatedAt: asString(attr(data, 'updated_at')),
+    };
+};
+
+export const rawDataToAdminDatabaseHostDatabase = (data: FractalResponseData): AdminDatabaseHostDatabase => {
+    const serverDetails = data.attributes.relationships?.server_details;
+
+    return {
+        id: asNumber(attr(data, 'id')),
+        serverId: asNumber(attr(data, 'server')),
+        hostId: asNumber(attr(data, 'host')),
+        database: asString(attr(data, 'database')),
+        username: asString(attr(data, 'username')),
+        remote: asString(attr(data, 'remote')),
+        maxConnections: asNullableNumber(attr(data, 'max_connections')),
+        serverName: serverDetails ? asString(serverDetails.attributes.name) : null,
+        serverIdentifier: serverDetails ? asString(serverDetails.attributes.identifier) : null,
+        createdAt: asString(attr(data, 'created_at')),
+        updatedAt: asString(attr(data, 'updated_at')),
+    };
+};
+
+export const rawDataToAdminDatabaseHost = (data: FractalResponseData): AdminDatabaseHost => {
+    const nodeDetails = data.attributes.relationships?.node_details;
+    const databases = relationshipList(data, 'databases').map(rawDataToAdminDatabaseHostDatabase);
+
+    return {
+        id: asNumber(attr(data, 'id')),
+        name: asString(attr(data, 'name')),
+        host: asString(attr(data, 'host')),
+        port: asNumber(attr(data, 'port')),
+        username: asString(attr(data, 'username')),
+        nodeId: asNullableNumber(attr(data, 'node')),
+        nodeName: nodeDetails ? asString(nodeDetails.attributes.name) : null,
+        databaseCount: asNumber(attr(data, 'databases_count')) || databases.length,
+        databases,
         createdAt: asString(attr(data, 'created_at')),
         updatedAt: asString(attr(data, 'updated_at')),
     };

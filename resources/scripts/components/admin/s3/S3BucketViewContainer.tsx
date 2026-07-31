@@ -78,12 +78,17 @@ const S3BucketOverview = ({ bucket }: { bucket: AdminS3Bucket }) => (
             <AdminCard>
                 <p className='text-xs uppercase tracking-[0.14em] text-white/40'>Attached Servers</p>
                 <p className='mt-2 text-2xl font-semibold'>{bucket.serverCount}</p>
-                <Link to={`/admin/buckets/view/${bucket.id}/servers`} className='mt-3 inline-block text-sm text-brand hover:text-brand/80'>
+                <Link
+                    to={`/admin/buckets/view/${bucket.id}/servers`}
+                    className='mt-3 inline-block text-sm text-brand hover:text-brand/80'
+                >
                     View servers
                 </Link>
             </AdminCard>
         </div>
-        {bucket.description && <AdminCard className='xl:col-span-2 text-sm text-white/70'>{bucket.description}</AdminCard>}
+        {bucket.description && (
+            <AdminCard className='xl:col-span-2 text-sm text-white/70'>{bucket.description}</AdminCard>
+        )}
     </div>
 );
 
@@ -142,7 +147,9 @@ const S3BucketViewContainer = ({ mode }: S3BucketViewContainerProps) => {
                 <div className='flex flex-col gap-4'>
                     <S3BucketNav id={data.id} />
                     {mode === 'overview' && <S3BucketOverview bucket={data} />}
-                    {mode === 'details' && <S3BucketForm bucket={data} submitLabel='Save Bucket' onSubmit={handleSubmit} />}
+                    {mode === 'details' && (
+                        <S3BucketForm bucket={data} submitLabel='Save Bucket' onSubmit={handleSubmit} />
+                    )}
                     {mode === 'servers' && <S3BucketServers bucket={data} />}
                     {mode === 'delete' && (
                         <AdminCard className='max-w-2xl border-red-500/40 bg-red-500/10 text-sm text-red-100'>
@@ -150,11 +157,13 @@ const S3BucketViewContainer = ({ mode }: S3BucketViewContainerProps) => {
                                 <div>
                                     <h2 className='text-lg font-semibold text-white'>Delete S3 Bucket</h2>
                                     <p className='mt-2 text-red-100/80'>
-                                        Deleting this configuration is irreversible. Backups stored in this bucket may no longer be accessible from the panel.
+                                        Deleting this configuration is irreversible. Backups stored in this bucket may
+                                        no longer be accessible from the panel.
                                     </p>
                                     {data.serverCount > 0 && (
                                         <p className='mt-3 font-medium'>
-                                            This bucket is attached to {data.serverCount} server(s). Reassign those servers before deleting it.
+                                            This bucket is attached to {data.serverCount} server(s). Reassign those
+                                            servers before deleting it.
                                         </p>
                                     )}
                                 </div>
