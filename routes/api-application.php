@@ -194,3 +194,20 @@ Route::group(['prefix' => '/nests'], function () {
         Route::post('/import-url', [Application\Nests\EggController::class, 'importFromUrl']);
     });
 });
+
+/*
+|--------------------------------------------------------------------------
+| Application API Key Endpoint
+|--------------------------------------------------------------------------
+|
+| Endpoint: /api/application/api-keys
+|
+*/
+Route::group(['prefix' => '/api-keys'], function () {
+    Route::get('/', [Application\ApiKeys\ApiKeyController::class, 'index'])->name('api.application.api-keys');
+    Route::get('/permissions', [Application\ApiKeys\ApiKeyController::class, 'permissions'])->name('api.application.api-keys.permissions');
+
+    Route::post('/', [Application\ApiKeys\ApiKeyController::class, 'store']);
+
+    Route::delete('/{identifier}', [Application\ApiKeys\ApiKeyController::class, 'delete']);
+});

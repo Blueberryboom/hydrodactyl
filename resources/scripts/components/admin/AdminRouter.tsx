@@ -2,6 +2,8 @@ import { useStoreState } from 'easy-peasy';
 import { Link, Route, Routes } from 'react-router-dom';
 
 import AdminOverviewContainer from '@/components/admin/AdminOverviewContainer';
+import ApplicationApiCreateContainer from '@/components/admin/applicationApi/ApplicationApiCreateContainer';
+import ApplicationApiListContainer from '@/components/admin/applicationApi/ApplicationApiListContainer';
 import DatabaseHostListContainer from '@/components/admin/databases/DatabaseHostListContainer';
 import DatabaseHostViewContainer from '@/components/admin/databases/DatabaseHostViewContainer';
 import LocationCreateContainer from '@/components/admin/locations/LocationCreateContainer';
@@ -354,6 +356,8 @@ const adminPages: AdminPageDefinition[] = [
 
 const implementedPaths = new Set([
     '',
+    'api',
+    'api/new',
     'users',
     'users/new',
     'users/view/:id',
@@ -418,6 +422,8 @@ const AdminRouter = () => {
     return (
         <Routes>
             <Route path='' element={<AdminOverviewContainer />} />
+            <Route path='api' element={<ApplicationApiListContainer />} />
+            <Route path='api/new' element={<ApplicationApiCreateContainer />} />
             <Route path='users' element={<UserListContainer />} />
             <Route path='users/new' element={<UserCreateContainer />} />
             <Route path='users/view/:id' element={<UserViewContainer />} />

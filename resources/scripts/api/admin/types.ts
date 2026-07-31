@@ -229,3 +229,26 @@ export interface TestDatabaseHostConnectionResponse {
     version?: string;
     has_grant_option?: boolean;
 }
+
+export interface AdminApplicationApiKey {
+    id: number;
+    identifier: string;
+    token: string;
+    memo: string;
+    lastUsedAt: string | null;
+    createdAt: string;
+    updatedAt: string;
+    permissions: Record<string, number>;
+}
+
+export interface AdminApplicationApiKeyPayload {
+    memo: string;
+    [key: string]: string | number;
+}
+
+export interface AdminApiKeyPermissionOptions {
+    resources: string[];
+    read: number;
+    readWrite: number;
+    none: number;
+}

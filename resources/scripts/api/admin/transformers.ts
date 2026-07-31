@@ -1,4 +1,5 @@
 import type {
+    AdminApplicationApiKey,
     AdminDatabaseHost,
     AdminDatabaseHostDatabase,
     AdminEgg,
@@ -26,6 +27,15 @@ const asRecord = (value: unknown): Record<string, unknown> =>
 const asStringRecord = (value: unknown): Record<string, string> =>
     Object.entries(asRecord(value)).reduce<Record<string, string>>((record, [key, entry]) => {
         if (typeof entry === 'string') {
+            record[key] = entry;
+        }
+
+        return record;
+    }, {});
+
+const asNumberRecord = (value: unknown): Record<string, number> =>
+    Object.entries(asRecord(value)).reduce<Record<string, number>>((record, [key, entry]) => {
+        if (typeof entry === 'number') {
             record[key] = entry;
         }
 
@@ -225,3 +235,14 @@ export const rawDataToAdminDatabaseHost = (data: FractalResponseData): AdminData
         updatedAt: asString(attr(data, 'updated_at')),
     };
 };
+
+export const rawDataToAdminApplicationApiKey = (data: FractalResponseData): AdminApplicationApiKey => ({
+    id: asNumber(attr(data, 'id')),
+    identifier: asString(attr(data, 'identifier')),
+    token: asString(attr(data, 'token')),
+    memo: asString(attr(data, 'memo')),
+    lastUsedAt: asNullableString(attr(data, 'last_used_at')),
+    createdAt: asString(attr(data, 'created_at')),
+    updatedAt: asString(attr(data, 'updated_at')),
+    permissions: asNumberRecord(attr(data, 'permissions')),
+});

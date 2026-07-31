@@ -1,15 +1,18 @@
 <?php
 
-namespace Pterodactyl\Http\Requests\Admin\Api;
+namespace Pterodactyl\Http\Requests\Api\Application\ApiKeys;
 
 use Pterodactyl\Models\ApiKey;
 use Pterodactyl\Services\Acl\Api\AdminAcl;
-use Pterodactyl\Http\Requests\Admin\AdminFormRequest;
+use Pterodactyl\Http\Requests\Api\Application\ApplicationApiRequest;
 
-class StoreApplicationApiKeyRequest extends AdminFormRequest
+class StoreApiKeyRequest extends ApplicationApiRequest
 {
+    protected ?string $resource = AdminAcl::RESOURCE_SETTINGS;
+
+    protected int $permission = AdminAcl::WRITE;
+
     /**
-     * @throws \ReflectionException
      * @throws \ReflectionException
      */
     public function rules(): array
