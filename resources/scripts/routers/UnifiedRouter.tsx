@@ -1,5 +1,6 @@
 import {
     Activity02Icon,
+    ApiIcon,
     BookOpen01Icon,
     Cardiogram01Icon,
     ClockIcon,
@@ -19,6 +20,7 @@ import {
     NoteIcon,
     PaintBucketIcon,
     RocketIcon,
+    ServerStack01Icon,
     ServerStack02Icon,
     Settings02Icon,
     Settings04Icon,
@@ -366,7 +368,7 @@ const UnifiedRouter = () => {
                 },
                 {
                     to: '/admin/api',
-                    icon: GlobeIcon,
+                    icon: ApiIcon,
                     text: 'App API',
                     minimizedText: 'API',
                     tabName: 'admin-api',
@@ -400,7 +402,7 @@ const UnifiedRouter = () => {
                 },
                 {
                     to: '/admin/nodes',
-                    icon: ServerStack02Icon,
+                    icon: ServerStack01Icon,
                     text: 'Nodes',
                     tabName: 'admin-nodes',
                     ref: NavigationAdminNodes,

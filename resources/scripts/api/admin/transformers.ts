@@ -4,6 +4,7 @@ import type {
     AdminLocation,
     AdminNest,
     AdminNodeSummary,
+    AdminS3Bucket,
     AdminServerSummary,
     AdminUser,
 } from '@/api/admin/types';
@@ -162,5 +163,26 @@ export const rawDataToAdminNest = (data: FractalResponseData): AdminNest => {
         createdAt: asString(attr(data, 'created_at')),
         updatedAt: asString(attr(data, 'updated_at')),
         eggs,
+    };
+};
+
+export const rawDataToAdminS3Bucket = (data: FractalResponseData): AdminS3Bucket => {
+    const servers = relationshipList(data, 'servers').map(rawDataToAdminServerSummary);
+
+    return {
+        id: asNumber(attr(data, 'id')),
+        name: asString(attr(data, 'name')),
+        description: asNullableString(attr(data, 'description')),
+        accessKey: asString(attr(data, 'access_key')),
+        secretKey: asString(attr(data, 'secret_key')),
+        endpoint: asNullableString(attr(data, 'endpoint')),
+        region: asString(attr(data, 'region')) || 'us-east-1',
+        bucketName: asString(attr(data, 'bucket_name')),
+        usePathStyleEndpoint: asBoolean(attr(data, 'use_path_style_endpoint')),
+        enabled: asBoolean(attr(data, 'enabled')),
+        serverCount: asNumber(attr(data, 'servers_count')) || servers.length,
+        servers,
+        createdAt: asString(attr(data, 'created_at')),
+        updatedAt: asString(attr(data, 'updated_at')),
     };
 };

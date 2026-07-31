@@ -100,6 +100,23 @@ export interface AdminNest {
     eggs: AdminEggSummary[];
 }
 
+export interface AdminS3Bucket {
+    id: number;
+    name: string;
+    description: string | null;
+    accessKey: string;
+    secretKey: string;
+    endpoint: string | null;
+    region: string;
+    bucketName: string;
+    usePathStyleEndpoint: boolean;
+    enabled: boolean;
+    serverCount: number;
+    servers: AdminServerSummary[];
+    createdAt: string;
+    updatedAt: string;
+}
+
 export interface AdminPaginatedResult<T> {
     items: T[];
     pagination: PaginationDataSet;
@@ -143,4 +160,16 @@ export interface EggFormPayload {
     script_entry: string;
     script_container: string;
     features: string[];
+}
+
+export interface S3BucketFormPayload {
+    name: string;
+    description?: string | null;
+    access_key: string;
+    secret_key: string;
+    endpoint?: string | null;
+    region?: string | null;
+    bucket_name: string;
+    use_path_style_endpoint: boolean;
+    enabled: boolean;
 }

@@ -43,6 +43,15 @@ Route::group(['prefix' => '/settings'], function () {
     Route::delete('/domains/{domain:id}', [Application\Settings\SettingsController::class, 'deleteDomain']);
 });
 
+Route::group(['prefix' => '/s3'], function () {
+    Route::get('/', [Application\S3\S3Controller::class, 'index'])->name('api.application.s3');
+    Route::post('/', [Application\S3\S3Controller::class, 'store']);
+    Route::post('/test-connection', [Application\S3\S3Controller::class, 'testConnection']);
+    Route::get('/{s3:id}', [Application\S3\S3Controller::class, 'view'])->name('api.application.s3.view');
+    Route::patch('/{s3:id}', [Application\S3\S3Controller::class, 'update']);
+    Route::delete('/{s3:id}', [Application\S3\S3Controller::class, 'delete']);
+});
+
 
 /*
 |--------------------------------------------------------------------------

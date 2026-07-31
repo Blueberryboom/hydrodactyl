@@ -10,6 +10,9 @@ import EggViewContainer from '@/components/admin/nests/EggViewContainer';
 import NestCreateContainer from '@/components/admin/nests/NestCreateContainer';
 import NestListContainer from '@/components/admin/nests/NestListContainer';
 import NestViewContainer from '@/components/admin/nests/NestViewContainer';
+import S3BucketCreateContainer from '@/components/admin/s3/S3BucketCreateContainer';
+import S3BucketListContainer from '@/components/admin/s3/S3BucketListContainer';
+import S3BucketViewContainer from '@/components/admin/s3/S3BucketViewContainer';
 import AdvancedSettingsContainer from '@/components/admin/settings/AdvancedSettingsContainer';
 import CaptchaSettingsContainer from '@/components/admin/settings/CaptchaSettingsContainer';
 import CustomNavigationSettingsContainer from '@/components/admin/settings/CustomNavigationSettingsContainer';
@@ -369,6 +372,12 @@ const implementedPaths = new Set([
     'nests/view/:id',
     'nests/egg/new',
     'nests/egg/:id',
+    'buckets',
+    'buckets/new',
+    'buckets/view/:id',
+    'buckets/view/:id/details',
+    'buckets/view/:id/servers',
+    'buckets/view/:id/delete',
 ]);
 
 const AdminPlaceholderPage = ({ title, description, legacyRoute }: AdminPageDefinition) => (
@@ -425,6 +434,12 @@ const AdminRouter = () => {
             <Route path='nests/view/:id' element={<NestViewContainer />} />
             <Route path='nests/egg/new' element={<EggCreateContainer />} />
             <Route path='nests/egg/:id' element={<EggViewContainer />} />
+            <Route path='buckets' element={<S3BucketListContainer />} />
+            <Route path='buckets/new' element={<S3BucketCreateContainer />} />
+            <Route path='buckets/view/:id' element={<S3BucketViewContainer mode='overview' />} />
+            <Route path='buckets/view/:id/details' element={<S3BucketViewContainer mode='details' />} />
+            <Route path='buckets/view/:id/servers' element={<S3BucketViewContainer mode='servers' />} />
+            <Route path='buckets/view/:id/delete' element={<S3BucketViewContainer mode='delete' />} />
             {adminPages
                 .filter((page) => !implementedPaths.has(page.path))
                 .map((page) => (

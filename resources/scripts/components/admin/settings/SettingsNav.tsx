@@ -1,34 +1,15 @@
-import { NavLink } from 'react-router-dom';
-import { cn } from '@/lib/utils';
+import AdminTabs, { type AdminTabDefinition } from '@/components/admin/AdminTabs';
 
-const tabs = [
-    ['General', '/admin/settings'],
-    ['Mail', '/admin/settings/mail'],
-    ['Captcha', '/admin/settings/captcha'],
-    ['Domains', '/admin/settings/domains'],
-    ['Custom Navigation', '/admin/settings/custom-navigation'],
-    ['Branding', '/admin/settings/logo'],
-    ['Advanced', '/admin/settings/advanced'],
+const tabs: AdminTabDefinition[] = [
+    { label: 'General', to: '/admin/settings', end: true },
+    { label: 'Mail', to: '/admin/settings/mail' },
+    { label: 'Captcha', to: '/admin/settings/captcha' },
+    { label: 'Domains', to: '/admin/settings/domains' },
+    { label: 'Custom Navigation', to: '/admin/settings/custom-navigation' },
+    { label: 'Branding', to: '/admin/settings/logo' },
+    { label: 'Advanced', to: '/admin/settings/advanced' },
 ];
 
-const SettingsNav = () => (
-    <div className='flex flex-wrap gap-2'>
-        {tabs.map(([label, to]) => (
-            <NavLink
-                key={to}
-                to={to}
-                end={to === '/admin/settings'}
-                className={({ isActive }) =>
-                    cn(
-                        'rounded-xl border border-mocha-400 px-3 py-2 text-sm font-medium text-white/65 transition hover:border-brand/60 hover:text-white',
-                        isActive && 'border-brand/70 bg-brand/10 text-brand',
-                    )
-                }
-            >
-                {label}
-            </NavLink>
-        ))}
-    </div>
-);
+const SettingsNav = () => <AdminTabs tabs={tabs} />;
 
 export default SettingsNav;

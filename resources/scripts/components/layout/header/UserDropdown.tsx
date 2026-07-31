@@ -46,14 +46,11 @@ export default function UserDropdown({ serverId }: UserDropdownProps) {
     const [emailHash, setEmailHash] = useState<string>('');
 
     useEffect(() => {
-        const computeEmailHash = async () => {
-            const hash = await sha256Hash(email.toLowerCase().trim());
-            setEmailHash(hash);
-        };
+        if (!email) return;
 
-        if (email) {
-            computeEmailHash();
-        }
+        sha256Hash(email.toLowerCase().trim())
+            .then(setEmailHash)
+            .catch(() => {});
     }, [email]);
 
     const onTriggerLogout = () => {
