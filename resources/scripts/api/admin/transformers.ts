@@ -1,4 +1,5 @@
 import type {
+    AdminAllocation,
     AdminApplicationApiKey,
     AdminDatabaseHost,
     AdminDatabaseHostDatabase,
@@ -6,6 +7,8 @@ import type {
     AdminEggSummary,
     AdminLocation,
     AdminNest,
+    AdminNode,
+    AdminNodeLocationRef,
     AdminNodeSummary,
     AdminS3Bucket,
     AdminServerSummary,
@@ -90,6 +93,9 @@ export const rawDataToAdminNodeSummary = (data: FractalResponseData): AdminNodeS
 
 export const rawDataToAdminServerSummary = (data: FractalResponseData): AdminServerSummary => {
     const limits = asRecord(attr(data, 'limits'));
+    const user = data.attributes.relationships?.user as FractalResponseData | undefined;
+    const nest = data.attributes.relationships?.nest as FractalResponseData | undefined;
+    const egg = data.attributes.relationships?.egg as FractalResponseData | undefined;
 
     return {
         id: asNumber(attr(data, 'id')),
@@ -100,6 +106,11 @@ export const rawDataToAdminServerSummary = (data: FractalResponseData): AdminSer
         memory: asNumber(limits.memory),
         disk: asNumber(limits.disk),
         excludeFromResourceCalculation: asBoolean(limits.exclude_from_resource_calculation),
+        ownerId: asNumber(attr(data, 'user')),
+        ownerUsername: user ? asNullableString(user.attributes.username) : null,
+        ownerEmail: user ? asNullableString(user.attributes.email) : null,
+        nestName: nest ? asNullableString(nest.attributes.name) : null,
+        eggName: egg ? asNullableString(egg.attributes.name) : null,
     };
 };
 
@@ -246,3 +257,66 @@ export const rawDataToAdminApplicationApiKey = (data: FractalResponseData): Admi
     updatedAt: asString(attr(data, 'updated_at')),
     permissions: asNumberRecord(attr(data, 'permissions')),
 });
+
+export const rawDataToAdminNodeLocationRef = (data: FractalResponseData): AdminNodeLocationRef => ({
+    id: asNumber(attr(data, 'id')),
+    short: asString(attr(data, 'short')),
+    long: asString(attr(data, 'long')),
+});
+
+export const rawDataToAdminAllocation = (data: FractalResponseData): AdminAllocation => {
+    const server = data.attributes.relationships?.server as FractalResponseData | undefined;
+
+    return {
+        id: asNumber(attr(data, 'id')),
+        ip: asString(attr(data, 'ip')),
+        alias: asNullableString(attr(data, 'alias')),
+        port: asNumber(attr(data, 'port')),
+        notes: asNullableString(attr(data, 'notes')),
+        assigned: asBoolean(attr(data, 'assigned')),
+        server: server ? rawDataToAdminServerSummary(server) : null,
+    };
+};
+
+export const rawDataToAdminNode = (data: FractalResponseData): AdminNode => {
+    const allocatedResources = asRecord(attr(data, 'allocated_resources'));
+    const resourceCapacity = asRecord(attr(data, 'resource_capacity'));
+    const location = data.attributes.relationships?.location;
+    const allocations = relationshipList(data, 'allocations').map(rawDataToAdminAllocation);
+    const servers = relationshipList(data, 'servers').map(rawDataToAdminServerSummary);
+
+    return {
+        id: asNumber(attr(data, 'id')),
+        uuid: asString(attr(data, 'uuid')),
+        public: asBoolean(attr(data, 'public')),
+        trustAlias: asBoolean(attr(data, 'trust_alias')),
+        name: asString(attr(data, 'name')),
+        description: asNullableString(attr(data, 'description')),
+        locationId: asNumber(attr(data, 'location_id')),
+        fqdn: asString(attr(data, 'fqdn')),
+        internalFqdn: asNullableString(attr(data, 'internal_fqdn')),
+        scheme: asString(attr(data, 'scheme')),
+        behindProxy: asBoolean(attr(data, 'behind_proxy')),
+        maintenanceMode: asBoolean(attr(data, 'maintenance_mode')),
+        memory: asNumber(attr(data, 'memory')),
+        memoryOverallocate: asNumber(attr(data, 'memory_overallocate')),
+        disk: asNumber(attr(data, 'disk')),
+        diskOverallocate: asNumber(attr(data, 'disk_overallocate')),
+        uploadSize: asNumber(attr(data, 'upload_size')),
+        daemonListen: asNumber(attr(data, 'daemon_listen')),
+        daemonSftp: asNumber(attr(data, 'daemon_sftp')),
+        daemonBase: asString(attr(data, 'daemon_base')),
+        daemonType: asString(attr(data, 'daemon_type')),
+        backupDisk: asString(attr(data, 'backup_disk')),
+        bucket: asNullableNumber(attr(data, 'bucket')),
+        allocatedMemory: asNumber(allocatedResources.memory),
+        allocatedDisk: asNumber(allocatedResources.disk),
+        memoryCapacity: asNumber(resourceCapacity.memory),
+        diskCapacity: asNumber(resourceCapacity.disk),
+        location: location ? rawDataToAdminNodeLocationRef(location as FractalResponseData) : null,
+        allocations,
+        servers,
+        createdAt: asString(attr(data, 'created_at')),
+        updatedAt: asString(attr(data, 'updated_at')),
+    };
+};

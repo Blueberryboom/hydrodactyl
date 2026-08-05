@@ -14,6 +14,9 @@ import EggViewContainer from '@/components/admin/nests/EggViewContainer';
 import NestCreateContainer from '@/components/admin/nests/NestCreateContainer';
 import NestListContainer from '@/components/admin/nests/NestListContainer';
 import NestViewContainer from '@/components/admin/nests/NestViewContainer';
+import NodeCreateContainer from '@/components/admin/nodes/NodeCreateContainer';
+import NodeListContainer from '@/components/admin/nodes/NodeListContainer';
+import NodeViewContainer from '@/components/admin/nodes/NodeViewContainer';
 import S3BucketCreateContainer from '@/components/admin/s3/S3BucketCreateContainer';
 import S3BucketListContainer from '@/components/admin/s3/S3BucketListContainer';
 import S3BucketViewContainer from '@/components/admin/s3/S3BucketViewContainer';
@@ -380,6 +383,13 @@ const implementedPaths = new Set([
     'nests/view/:id',
     'nests/egg/new',
     'nests/egg/:id',
+    'nodes',
+    'nodes/new',
+    'nodes/view/:id',
+    'nodes/view/:id/settings',
+    'nodes/view/:id/configuration',
+    'nodes/view/:id/allocation',
+    'nodes/view/:id/servers',
     'buckets',
     'buckets/new',
     'buckets/view/:id',
@@ -446,6 +456,13 @@ const AdminRouter = () => {
             <Route path='nests/view/:id' element={<NestViewContainer />} />
             <Route path='nests/egg/new' element={<EggCreateContainer />} />
             <Route path='nests/egg/:id' element={<EggViewContainer />} />
+            <Route path='nodes' element={<NodeListContainer />} />
+            <Route path='nodes/new' element={<NodeCreateContainer />} />
+            <Route path='nodes/view/:id' element={<NodeViewContainer mode='overview' />} />
+            <Route path='nodes/view/:id/settings' element={<NodeViewContainer mode='settings' />} />
+            <Route path='nodes/view/:id/configuration' element={<NodeViewContainer mode='configuration' />} />
+            <Route path='nodes/view/:id/allocation' element={<NodeViewContainer mode='allocation' />} />
+            <Route path='nodes/view/:id/servers' element={<NodeViewContainer mode='servers' />} />
             <Route path='buckets' element={<S3BucketListContainer />} />
             <Route path='buckets/new' element={<S3BucketCreateContainer />} />
             <Route path='buckets/view/:id' element={<S3BucketViewContainer mode='overview' />} />

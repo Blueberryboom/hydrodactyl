@@ -48,6 +48,87 @@ export interface AdminNodeSummary {
     maintenanceMode: boolean;
 }
 
+export interface AdminNodeLocationRef {
+    id: number;
+    short: string;
+    long: string;
+}
+
+export interface AdminNode {
+    id: number;
+    uuid: string;
+    public: boolean;
+    trustAlias: boolean;
+    name: string;
+    description: string | null;
+    locationId: number;
+    fqdn: string;
+    internalFqdn: string | null;
+    scheme: string;
+    behindProxy: boolean;
+    maintenanceMode: boolean;
+    memory: number;
+    memoryOverallocate: number;
+    disk: number;
+    diskOverallocate: number;
+    uploadSize: number;
+    daemonListen: number;
+    daemonSftp: number;
+    daemonBase: string;
+    daemonType: string;
+    backupDisk: string;
+    bucket: number | null;
+    allocatedMemory: number;
+    allocatedDisk: number;
+    memoryCapacity: number;
+    diskCapacity: number;
+    location: AdminNodeLocationRef | null;
+    allocations: AdminAllocation[];
+    servers: AdminServerSummary[];
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface AdminAllocation {
+    id: number;
+    ip: string;
+    alias: string | null;
+    port: number;
+    notes: string | null;
+    assigned: boolean;
+    server: AdminServerSummary | null;
+}
+
+export interface NodeFormPayload {
+    public: boolean;
+    name: string;
+    description?: string | null;
+    location_id: number;
+    fqdn: string;
+    internal_fqdn: string | null;
+    scheme: string;
+    behind_proxy: boolean;
+    maintenance_mode: boolean;
+    trust_alias: boolean;
+    memory: number;
+    memory_overallocate: number;
+    disk: number;
+    disk_overallocate: number;
+    upload_size: number;
+    daemon_listen: number;
+    daemon_sftp: number;
+    daemon_base: string;
+    daemon_type: string;
+    backup_disk: string;
+    bucket: number | null;
+}
+
+export interface AllocationFormPayload {
+    ip: string;
+    alias?: string | null;
+    ports: string[];
+}
+
 export interface AdminServerSummary {
     id: number;
     uuid: string;
@@ -57,6 +138,11 @@ export interface AdminServerSummary {
     memory: number;
     disk: number;
     excludeFromResourceCalculation: boolean;
+    ownerId: number;
+    ownerUsername: string | null;
+    ownerEmail: string | null;
+    nestName: string | null;
+    eggName: string | null;
 }
 
 export interface AdminEggSummary {

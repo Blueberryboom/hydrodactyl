@@ -14,6 +14,7 @@ use Pterodactyl\Transformers\Api\Application\AllocationTransformer;
 use Pterodactyl\Http\Controllers\Api\Application\ApplicationApiController;
 use Pterodactyl\Http\Requests\Api\Application\Allocations\GetAllocationsRequest;
 use Pterodactyl\Http\Requests\Api\Application\Allocations\StoreAllocationRequest;
+use Pterodactyl\Http\Requests\Api\Application\Allocations\UpdateAllocationRequest;
 use Pterodactyl\Http\Requests\Api\Application\Allocations\DeleteAllocationRequest;
 
 class AllocationController extends ApplicationApiController
@@ -77,6 +78,18 @@ class AllocationController extends ApplicationApiController
     public function delete(DeleteAllocationRequest $request, Node $node, Allocation $allocation): JsonResponse
     {
         $this->deletionService->handle($allocation);
+
+        return new JsonResponse([], JsonResponse::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * Set the alias for a single allocation on a node.
+     */
+    public function update(UpdateAllocationRequest $request, Node $node, Allocation $allocation): JsonResponse
+    {
+        $allocation->update([
+            'ip_alias' => empty($request->input('alias')) ? null : $request->input('alias'),
+        ]);
 
         return new JsonResponse([], JsonResponse::HTTP_NO_CONTENT);
     }
