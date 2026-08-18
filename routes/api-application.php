@@ -97,6 +97,7 @@ Route::group(['prefix' => '/nodes'], function () {
     Route::get('/deployable', Application\Nodes\NodeDeploymentController::class);
     Route::get('/{node:id}', [Application\Nodes\NodeController::class, 'view'])->name('api.application.nodes.view');
     Route::get('/{node:id}/configuration', Application\Nodes\NodeConfigurationController::class);
+    Route::get('/{node:id}/system-information', Application\Nodes\NodeSystemInformationController::class);
 
     Route::post('/', [Application\Nodes\NodeController::class, 'store']);
     Route::patch('/{node:id}', [Application\Nodes\NodeController::class, 'update']);

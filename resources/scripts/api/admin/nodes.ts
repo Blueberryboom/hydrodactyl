@@ -87,7 +87,7 @@ export const getAdminNodeConfiguration = async (id: number): Promise<Record<stri
 };
 
 export const getAdminNodeSystemInformation = async (id: number): Promise<AdminNodeSystemInformation> => {
-    const { data } = await http.get<AdminNodeSystemInformation>(`/admin/nodes/view/${id}/system-information`);
+    const { data } = await http.get<AdminNodeSystemInformation>(`/api/application/nodes/${id}/system-information`);
 
     return data;
 };

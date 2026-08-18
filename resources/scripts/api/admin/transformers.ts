@@ -55,6 +55,21 @@ const relationshipList = (data: FractalResponseData, key: string): FractalRespon
     return [];
 };
 
+const relationshipItem = (data: FractalResponseData, key: string): FractalResponseData | null => {
+    const relationship = data.attributes.relationships?.[key];
+
+    if (
+        !relationship ||
+        relationship.object === 'list' ||
+        relationship.object === 'null_resource' ||
+        !relationship.attributes
+    ) {
+        return null;
+    }
+
+    return relationship as FractalResponseData;
+};
+
 export const rawDataToAdminUser = (data: FractalResponseData): AdminUser => ({
     id: asNumber(attr(data, 'id')),
     externalId: asNullableString(attr(data, 'external_id')),
@@ -93,9 +108,9 @@ export const rawDataToAdminNodeSummary = (data: FractalResponseData): AdminNodeS
 
 export const rawDataToAdminServerSummary = (data: FractalResponseData): AdminServerSummary => {
     const limits = asRecord(attr(data, 'limits'));
-    const user = data.attributes.relationships?.user as FractalResponseData | undefined;
-    const nest = data.attributes.relationships?.nest as FractalResponseData | undefined;
-    const egg = data.attributes.relationships?.egg as FractalResponseData | undefined;
+    const user = relationshipItem(data, 'user');
+    const nest = relationshipItem(data, 'nest');
+    const egg = relationshipItem(data, 'egg');
 
     return {
         id: asNumber(attr(data, 'id')),
@@ -211,7 +226,7 @@ export const rawDataToAdminS3Bucket = (data: FractalResponseData): AdminS3Bucket
 };
 
 export const rawDataToAdminDatabaseHostDatabase = (data: FractalResponseData): AdminDatabaseHostDatabase => {
-    const serverDetails = data.attributes.relationships?.server_details;
+    const serverDetails = relationshipItem(data, 'server_details');
 
     return {
         id: asNumber(attr(data, 'id')),
@@ -229,7 +244,7 @@ export const rawDataToAdminDatabaseHostDatabase = (data: FractalResponseData): A
 };
 
 export const rawDataToAdminDatabaseHost = (data: FractalResponseData): AdminDatabaseHost => {
-    const nodeDetails = data.attributes.relationships?.node_details;
+    const nodeDetails = relationshipItem(data, 'node_details');
     const databases = relationshipList(data, 'databases').map(rawDataToAdminDatabaseHostDatabase);
 
     return {
@@ -265,7 +280,7 @@ export const rawDataToAdminNodeLocationRef = (data: FractalResponseData): AdminN
 });
 
 export const rawDataToAdminAllocation = (data: FractalResponseData): AdminAllocation => {
-    const server = data.attributes.relationships?.server as FractalResponseData | undefined;
+    const server = relationshipItem(data, 'server');
 
     return {
         id: asNumber(attr(data, 'id')),
@@ -281,7 +296,7 @@ export const rawDataToAdminAllocation = (data: FractalResponseData): AdminAlloca
 export const rawDataToAdminNode = (data: FractalResponseData): AdminNode => {
     const allocatedResources = asRecord(attr(data, 'allocated_resources'));
     const resourceCapacity = asRecord(attr(data, 'resource_capacity'));
-    const location = data.attributes.relationships?.location;
+    const location = relationshipItem(data, 'location');
     const allocations = relationshipList(data, 'allocations').map(rawDataToAdminAllocation);
     const servers = relationshipList(data, 'servers').map(rawDataToAdminServerSummary);
 
@@ -313,7 +328,7 @@ export const rawDataToAdminNode = (data: FractalResponseData): AdminNode => {
         allocatedDisk: asNumber(allocatedResources.disk),
         memoryCapacity: asNumber(resourceCapacity.memory),
         diskCapacity: asNumber(resourceCapacity.disk),
-        location: location ? rawDataToAdminNodeLocationRef(location as FractalResponseData) : null,
+        location: location ? rawDataToAdminNodeLocationRef(location) : null,
         allocations,
         servers,
         createdAt: asString(attr(data, 'created_at')),
